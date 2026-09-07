@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Open the dashboard. Reuses a running instance if there is one.
+set -e
+PORT=7717
+if lsof -tiTCP:$PORT -sTCP:LISTEN >/dev/null 2>&1; then
+  echo "already running → http://127.0.0.1:$PORT/"
+  open "http://127.0.0.1:$PORT/"
+else
+  # resolved relative to this script, so the tree can be moved or renamed
+  exec python3 "$(cd "$(dirname "$0")/.." && pwd)/dashboard/server.py" "$@"
+fi

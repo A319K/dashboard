@@ -1,0 +1,25 @@
+# ── Personal data. This repo ships the system, not anyone's week. ──────────
+# Your real config and state live here locally and are never committed.
+commitments.yaml
+deadlines.yaml
+tasks.jsonl
+pending_calendar.jsonl
+calendar.json
+STATE.md
+PROFILE.md
+MASTER_PLAN.md
+CALENDAR.md
+projects/*.md
+log/*.jsonl
+log/runtime.json
+inbox/*
+
+# Credentials. The secret iCal address grants read access to a whole calendar.
+calendar_source.txt
+
+# Machine-local
+__pycache__/
+.DS_Store
+
+# Keep the empty directories the tools expect
+!**/.gitkeep

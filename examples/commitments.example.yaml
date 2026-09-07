@@ -1,0 +1,58 @@
+# Copy to ../commitments.yaml and make it yours.
+#
+#   cp examples/commitments.example.yaml commitments.yaml
+#
+# hours_min/hours_max are per week. Deadlines override budgets.
+# `id` is what everything else keys off — logs, tasks, project files.
+
+envelope:
+  earliest: "08:00"
+  latest: "23:00"
+  timezone: America/New_York
+  max_blocks_per_day: 4        # under-scheduling is the safe failure
+  block_minutes: 50
+  break_minutes: 10
+
+commitments:
+  # ---- Coursework ----
+  - id: course1
+    name: Course 1
+    dir: school/course1          # relative to the workspace root
+    lane: coursework
+    hours_min: 1
+    hours_max: 2
+    prefers: after_lecture       # material is freshest, context switch is cheap
+    priority: high
+
+  # ---- A deep-work project ----
+  - id: research
+    name: Research Project
+    dir: research
+    lane: research
+    hours_min: 3
+    hours_max: 4
+    prefers: deep_work
+    allow_double_block: true     # may take two back-to-back blocks
+    priority: high
+
+  # ---- Something that yields when a deadline week gets tight ----
+  - id: side-project
+    name: Side Project
+    dir: side-project
+    lane: side
+    hours_min: 0
+    hours_max: 4
+    prefers: night               # after 20:00
+    flexible: true               # first to give way
+    priority: low
+
+# ---- Logged, never scheduled ----
+# lanes drive colour in the UI: coursework, research, business, side,
+# software, work
+habits:
+  - id: gym
+    target_per_week: 4
+    stretch: 5
+  - id: cardio
+    target_per_week: 2
+    stretch: 3

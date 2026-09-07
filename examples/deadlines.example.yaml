@@ -1,0 +1,13 @@
+# Copy to ../deadlines.yaml. Populated by /intake from syllabi and specs.
+# status: open | scheduled | done | missed
+deadlines: []
+
+# Shape:
+# - id: course1-hw1
+#   commitment: course1
+#   title: "Homework 1"
+#   due: "2026-09-15T23:59:00-04:00"
+#   source: "school/course1/hw1.pdf"
+#   est_hours: 3
+#   status: open
+#   blocks: []

@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DotGothic16&family=Silkscreen:wght@400;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   COMMAND — a handheld console for one person's week.
+   Cream shell, brown ink, four-tone LCD. Everything is drawn
+   on a dot grid: no gradients, no blur, no rounded corners.
+   ═══════════════════════════════════════════════════════════ */
+:root{
+  /* the shell — tan case, cream screen, one step darker where things recess */
+  --ink:#2C231B; --shell:#E7D8C9; --panel:#FFF4E9; --sunk:#DCCBB9;
+  --mid:#6B5A48; --dot:rgba(107,90,72,.15);
+
+  /* sage: everything fixed or not-yet-real — classes, goal marks, met targets */
+  --sage:#879183; --sage-lt:#9EAB9A;
+
+  /* pigments — one per lane, used everywhere that lane appears */
+  --coursework:#3F6B72; --research:#6E5C7B; --business:#A9762A;
+  --side:#A4614C;       --software:#5F7F58; --work:#AE4A28;
+
+  --rec:#AE4A28; --ok:#5F7F58; --warn:#A9762A;
+
+  --display:"DotGothic16",ui-monospace,monospace;
+  --label:"Silkscreen",ui-monospace,monospace;
+  --body:"Space Grotesk",-apple-system,system-ui,sans-serif;
+  --data:"DM Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;color:var(--ink);background:var(--shell);font:15.5px/1.55 var(--body);
+  background-image:radial-gradient(var(--dot) 1.5px,transparent 1.5px);
+  background-size:7px 7px;background-attachment:fixed;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px 110px}
+::selection{background:var(--ink);color:var(--panel)}
+:focus-visible{outline:3px solid var(--rec);outline-offset:2px}
+svg{shape-rendering:crispEdges}
+
+/* ── frames ─────────────────────────────────────────── */
+.box{background:var(--panel);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
+/* the double rule is reserved for the two windows that take over the screen */
+.window{background:var(--panel);border:3px solid var(--ink);
+  box-shadow:inset 0 0 0 3px var(--panel),inset 0 0 0 6px var(--ink),8px 8px 0 var(--ink)}
+
+/* ── the label across the top of the machine ────────── */
+.bar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  margin:0 -22px 26px;padding:13px 22px;background:var(--shell);
+  border-bottom:3px solid var(--ink)}
+.mark{font:700 15px/1 var(--label);letter-spacing:.14em;display:flex;align-items:center;gap:10px}
+.led{width:11px;height:11px;background:var(--sunk);border:2px solid var(--ink);flex:none}
+.led.on{background:var(--rec);animation:blink 1.4s steps(1,end) infinite}
+@keyframes blink{50%{background:var(--panel)}}
+.bar .spread{flex:1}
+.stat{font:500 12px/1 var(--data);color:var(--mid);white-space:nowrap;
+  display:flex;align-items:center;gap:6px}
+.stat b{color:var(--ink);font-weight:500}
+.stat.stale b,.stat.stale{color:var(--rec)}
+
+/* ── NOW — the only thing that matters on open ──────── */
+.now{padding:30px 32px 26px;position:relative}
+.eyebrow{font:700 11px/1 var(--label);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--rec);display:flex;align-items:center;gap:9px}
+.now h2{font:400 clamp(28px,4.4vw,43px)/1.14 var(--display);margin:16px 0 0;max-width:19ch}
+.tape{margin-top:20px;padding:15px 17px;background:var(--sunk);border:3px solid var(--ink);
+  border-left-width:10px;border-left-color:var(--c,var(--rec));font-size:16px;max-width:62ch}
+.tape .cap{font:700 10.5px/1 var(--label);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink);opacity:.65;display:block;margin-bottom:7px}
+.clockwrap{text-align:right;flex:none}
+.clock{font:400 45px/1 var(--display);font-variant-numeric:tabular-nums}
+.nowtop{display:flex;justify-content:space-between;align-items:flex-start;gap:26px;flex-wrap:wrap}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+
+/* ── buttons: physical, they press into their shadow ── */
+button{font:400 12px/1 var(--label);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;
+  padding:12px 15px 10px;color:var(--ink);background:var(--panel);
+  border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+button:hover{background:var(--sunk)}
+button:active{transform:translate(3px,3px);box-shadow:none}
+button.go{background:var(--rec);color:var(--panel);display:inline-flex;align-items:center;gap:9px}
+button.go:hover{background:#8E2D11}
+button.go .dot{width:9px;height:9px;background:var(--panel)}
+button.sm{padding:9px 11px 7px;font-size:11px;box-shadow:2px 2px 0 var(--ink)}
+button.sm:active{transform:translate(2px,2px)}
+button.quiet{background:transparent;border-color:transparent;box-shadow:none;color:var(--mid);
+  text-decoration:underline;text-underline-offset:3px}
+button.quiet:hover{background:transparent;color:var(--ink)}
+button.quiet:active{transform:none}
+
+/* ── section tabs ───────────────────────────────────── */
+h3.sec{display:flex;align-items:center;gap:11px;margin:40px 0 14px}
+h3.sec b{background:var(--ink);color:var(--panel);font:700 11px/1 var(--label);
+  letter-spacing:.14em;text-transform:uppercase;padding:8px 11px 6px;font-weight:400}
+h3.sec::after{content:"";flex:1;height:3px;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 4px,transparent 4px 8px)}
+
+/* ── SIGNATURE: the week as a dot-matrix readout ────── */
+.trace{padding:16px 18px 14px;overflow-x:auto}
+.tbody{min-width:660px;position:relative;--off:140px}   /* --off = label column + gap */
+.row{display:grid;grid-template-columns:128px 1fr;gap:12px;align-items:center;padding:2px 0}
+.row .nm{font:500 12px/1.3 var(--data);color:var(--mid);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;display:flex;align-items:center;gap:7px}
+.row .nm i{width:9px;height:9px;background:var(--c);border:2px solid var(--ink);flex:none}
+.row.live .nm{color:var(--ink)}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.day{display:grid;grid-template-columns:repeat(15,1fr);gap:1px}
+.day s{height:17px;background:var(--sunk);text-decoration:none;display:block}
+.row.fixed .day s{height:11px}
+.day s.on{background:var(--c)}
+.day s.plan{background:repeating-linear-gradient(45deg,var(--c) 0 2px,transparent 2px 4px)}
+.day s.cls{background:var(--c,var(--sage))}
+.dayhdr{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:7px}
+.dayhdr span{font:700 11px/1 var(--label);letter-spacing:.08em;color:var(--mid);
+  text-align:center;text-transform:uppercase;padding:5px 0 4px}
+.dayhdr span.td{background:var(--ink);color:var(--panel)}
+.head{position:absolute;top:24px;bottom:0;width:3px;background:var(--rec);z-index:3}
+.head::before{content:"";position:absolute;top:-7px;left:-3px;width:9px;height:9px;background:var(--rec)}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:12px;
+  border-top:3px solid var(--sunk);font:500 11px/1.6 var(--data);color:var(--mid);letter-spacing:.02em}
+.legend b{display:inline-flex;align-items:center;gap:7px;font-weight:400}
+.legend i{width:14px;height:11px;background:var(--mid);flex:none}
+.legend i.p{background:repeating-linear-gradient(45deg,var(--mid) 0 2px,transparent 2px 4px)}
+.legend i.n{width:3px;background:var(--rec)}
+
+/* ── cards ──────────────────────────────────────────── */
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(224px,1fr))}
+.card{padding:17px 18px 16px;position:relative}
+.card::before{content:"";position:absolute;inset:-3px -3px auto -3px;height:6px;background:var(--c)}
+.ctop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:4px}
+.card h4{font:400 19px/1.25 var(--display);margin:0}
+.tag{font:500 11px/1 var(--data);letter-spacing:.06em;text-transform:uppercase;
+  color:var(--mid);white-space:nowrap;padding-top:5px}
+
+/* budget bar — a framed meter, segments are half hours */
+.meter{display:grid;grid-auto-flow:column;gap:2px;height:16px;margin-top:15px;padding:2px;
+  background:var(--sunk);border:3px solid var(--ink)}
+.meter s{background:transparent;text-decoration:none}
+.meter s.f{background:var(--c)}
+.meter s.g{background:var(--sage)}
+.mnum{font:500 11.5px/1 var(--data);color:var(--mid);margin-top:9px;display:flex;
+  justify-content:space-between;gap:10px}
+
+.next{margin:14px -10px 0;padding:9px 10px;font-size:14.5px;line-height:1.5;cursor:text;
+  border:3px solid transparent}
+.next:hover{background:var(--sunk)}
+.next:focus{outline:none;background:var(--panel);border-color:var(--ink)}
+.next:empty::before{content:"Write the first action for next time";color:var(--mid)}
+.flag{margin-top:13px;padding:9px 11px;background:var(--sunk);border-left:6px solid var(--warn);
+  font:500 12.5px/1.45 var(--data);display:flex;gap:9px;align-items:flex-start}
+
+/* ── today ──────────────────────────────────────────── */
+.item{display:flex;gap:15px;align-items:center;padding:13px 16px;margin-bottom:10px;
+  border-left-width:10px;border-left-color:var(--c)}
+.item.done{background:var(--sunk);box-shadow:none}
+.item.done .it{text-decoration:line-through;opacity:.6}
+.item .tm{font:500 12px/1 var(--data);color:var(--mid);min-width:44px}
+.it{font-weight:700;font-size:15.5px}
+.ia{color:var(--mid);font-size:13.5px;margin-top:3px;line-height:1.45}
+
+/* ── streaks & deadlines ────────────────────────────── */
+.pips{display:flex;gap:6px;margin-top:15px;flex-wrap:wrap}
+.pips s{width:27px;height:27px;background:var(--sunk);border:3px solid var(--ink);
+  text-decoration:none;display:flex;align-items:center;justify-content:center;
+  font:400 11px/1 var(--label);color:var(--mid)}
+.pips s.f{background:var(--c)}
+.pips s.x{background:repeating-linear-gradient(45deg,var(--sunk) 0 3px,transparent 3px 6px)}
+.dl{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:4px}
+.cd{font:400 33px/1 var(--display);white-space:nowrap}
+.cd.hot{color:var(--rec)} .cd.soon{color:var(--warn)}
+
+/* ── the cartridge slot ─────────────────────────────── */
+.drop{background:var(--sunk);border:3px dashed var(--ink);padding:30px 22px;text-align:center;
+  cursor:pointer;display:block;width:100%;box-shadow:none;text-transform:none;
+  font:15.5px/1.55 var(--body);letter-spacing:0}
+.drop:hover{background:#C2B08A}
+.drop:active{transform:none}
+.drop.hot{background:var(--panel);border-style:solid;border-color:var(--rec);
+  box-shadow:inset 0 0 0 4px var(--sunk)}
+.drop svg{width:30px;height:30px;color:var(--ink);margin-bottom:10px}
+.drop.hot svg{color:var(--rec)}
+.drop strong{display:block;font:400 20px/1.25 var(--display);margin-bottom:7px}
+.drop span{color:var(--mid);font-size:13.5px}
+.queue{margin-top:14px;border:3px solid var(--ink);background:var(--panel)}
+.file{display:flex;align-items:center;gap:13px;padding:11px 14px;
+  border-bottom:3px solid var(--sunk)}
+.file:last-child{border-bottom:0}
+.file .fn{font:500 13.5px/1.3 var(--data);word-break:break-all;flex:1}
+.file .fs{font:500 11px/1 var(--data);color:var(--mid);white-space:nowrap}
+.note{margin-top:12px;font-size:13.5px;color:var(--mid);line-height:1.55}
+
+/* ── empty states: an instruction, not an apology ───── */
+.void{background:var(--sunk);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);
+  padding:21px 22px;color:#6E5D42;font-size:14.5px;line-height:1.6}
+.void b{display:block;color:var(--ink);font:400 18px/1.3 var(--display);margin-bottom:7px}
+code{font:500 .9em var(--data);background:var(--sunk);padding:2px 5px;color:var(--ink)}
+
+/* ── log ────────────────────────────────────────────── */
+.log{display:flex;align-items:center;gap:13px;padding:11px 0;border-bottom:3px solid var(--sunk)}
+.log:last-child{border-bottom:0}
+.log i{width:9px;height:9px;background:var(--c);border:2px solid var(--ink);flex:none}
+.log .meta{font:400 11px/1 var(--data);color:var(--mid);margin-top:5px;letter-spacing:.02em}
+.log .rt{margin-left:auto;font:500 11.5px/1 var(--data);color:var(--mid);white-space:nowrap}
+
+/* ── task drawer ────────────────────────────────────── */
+.tbtn{position:relative}
+.tbtn s{position:absolute;top:-8px;right:-8px;min-width:20px;height:20px;padding:0 4px;
+  background:var(--rec);color:var(--panel);border:2px solid var(--ink);text-decoration:none;
+  font:700 10px/16px var(--label);display:flex;align-items:center;justify-content:center}
+.veil{position:fixed;inset:0;background:rgba(44,35,27,.4);z-index:50;
+  animation:fadein .14s steps(2,end)}
+@keyframes fadein{from{opacity:0}}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,92vw);z-index:51;
+  background:var(--panel);border-left:3px solid var(--ink);display:flex;flex-direction:column;
+  animation:slide .2s steps(4,end)}
+@keyframes slide{from{transform:translateX(100%)}}
+.dhead{display:flex;align-items:center;gap:12px;padding:15px 18px;
+  border-bottom:3px solid var(--ink);background:var(--ink);color:var(--panel)}
+.dhead h2{font:700 12px/1 var(--label);letter-spacing:.14em;margin:0;text-transform:uppercase}
+.dhead .x{margin-left:auto;background:transparent;border-color:transparent;box-shadow:none;
+  color:var(--panel);padding:4px 8px;font-size:15px}
+.dhead .x:hover{background:var(--rec)}
+.dbody{flex:1;overflow-y:auto;padding:16px 18px 22px}
+.dfoot{border-top:3px solid var(--ink);padding:14px 18px;background:var(--sunk)}
+
+/* ── tasks ──────────────────────────────────────────── */
+.tgroup{margin-bottom:20px}
+.tgroup h5{display:flex;align-items:center;gap:8px;margin:0 0 9px;
+  font:500 11px/1 var(--data);color:var(--mid);letter-spacing:.04em}
+.tgroup h5 i{width:9px;height:9px;background:var(--c);border:2px solid var(--ink);flex:none}
+.tgroup h5 b{margin-left:auto;font-weight:500;color:var(--mid)}
+.donehdr{display:flex;align-items:center;gap:9px;width:100%;margin:22px 0 10px;padding:9px 10px;
+  background:var(--sunk);border:3px solid var(--ink);box-shadow:none;justify-content:flex-start;
+  font:700 10.5px/1 var(--label);letter-spacing:.1em}
+.donehdr:active{transform:none}
+.donehdr s{margin-left:auto;text-decoration:none;color:var(--mid);font-weight:400}
+.task{display:flex;gap:11px;align-items:flex-start;padding:10px 11px;margin-bottom:7px;
+  background:var(--panel);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+  cursor:grab}
+.task:active{cursor:grabbing}
+.task.dragging{opacity:.4}
+.task.gone{background:var(--sunk);box-shadow:none;border-color:var(--mid)}
+.task.gone .tt{text-decoration:line-through;color:var(--mid)}
+.tick{width:22px;height:22px;flex:none;margin-top:1px;padding:0;background:var(--sunk);
+  border:3px solid var(--ink);box-shadow:none;color:var(--ink);font:700 12px/1 var(--label);
+  display:flex;align-items:center;justify-content:center}
+.tick:active{transform:none}
+.tick[aria-pressed=true]{background:var(--ok);color:var(--panel)}
+.tt{font-size:14.5px;line-height:1.4;font-weight:500}
+.tfa{font-size:12.5px;color:var(--mid);line-height:1.45;margin-top:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.chip{font:500 10.5px/1 var(--data);padding:4px 6px 3px;background:var(--sunk);color:var(--mid)}
+.chip.due{background:var(--warn);color:var(--panel)}
+.chip.hot{background:var(--rec);color:var(--panel)}
+.chip.sch{background:var(--sage);color:var(--panel)}
+.tdel{margin-left:auto;background:transparent;border-color:transparent;box-shadow:none;
+  color:var(--mid);padding:2px 5px;font-size:13px;line-height:1}
+.tdel:hover{background:var(--rec);color:var(--panel)}
+.tdel.armed{background:var(--rec);color:var(--panel);font:700 9px/1 var(--label);
+  letter-spacing:.06em;padding:5px 6px 4px}
+.tadd{display:grid;gap:8px}
+.tadd .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tadd input,.tadd select{padding:9px 11px;font-size:14px}
+
+/* ── planner ────────────────────────────────────────── */
+.pbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px;
+  padding-bottom:14px;border-bottom:3px solid var(--ink)}
+.pbar h1{font:400 22px/1 var(--display);margin:0}
+.plan{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+.pdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.pday{background:var(--panel);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+  min-height:230px;display:flex;flex-direction:column}
+.pday.today{box-shadow:3px 3px 0 var(--rec)}
+.pday.over{background:var(--sunk);border-color:var(--rec);box-shadow:inset 0 0 0 3px var(--rec)}
+.pday h6{margin:0;padding:8px 9px 6px;background:var(--sunk);border-bottom:3px solid var(--ink);
+  font:700 11px/1 var(--label);letter-spacing:.06em;display:flex;justify-content:space-between}
+.allday{padding:5px 7px;background:var(--sage);color:var(--panel);
+  font:500 10.5px/1.3 var(--data);border-bottom:3px solid var(--ink)}
+.pday.today h6{background:var(--ink);color:var(--panel)}
+.pday .slots{padding:7px;display:grid;gap:5px;align-content:start}
+.ev{padding:6px 7px;font:500 11px/1.35 var(--data);border-left:6px solid var(--c);
+  background:var(--sunk);color:var(--mid)}
+.ev.block{background:var(--panel);border:3px solid var(--ink);border-left-width:7px;
+  color:var(--ink)}
+.ev.block b{font-weight:500;font-size:11.5px}
+/* a day column is narrow; two lines and a tooltip beats a five-line wrap */
+.ev b,.ev span.tx{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;word-break:break-word}
+.ev .at{color:var(--mid);font-size:10.5px}
+.pdrop{margin:auto 7px 8px;padding:8px;text-align:center;border:3px dashed var(--sunk);
+  font:500 10.5px/1.3 var(--data);color:var(--mid)}
+.pday.over .pdrop{border-color:var(--rec);color:var(--rec)}
+@media (max-width:980px){
+  .plan{grid-template-columns:1fr}
+  .pdays{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── modal ──────────────────────────────────────────── */
+.scrim{position:fixed;inset:0;background:rgba(36,28,18,.55);display:flex;align-items:flex-start;
+  justify-content:center;padding:22px;z-index:60;overflow:auto;
+  background-image:radial-gradient(rgba(36,28,18,.5) 1.5px,transparent 1.5px);background-size:5px 5px}
+/* margin:auto centres the window when it fits and scrolls the scrim when it doesn't,
+   so no scrollbar ever cuts through the double frame */
+.modal{margin:auto;padding:26px 28px 24px;width:min(540px,100%);
+  animation:snap .18s steps(3,end)}
+@keyframes snap{from{transform:translate(-6px,-6px)}}
+.modal h2{font:400 27px/1.2 var(--display);margin:0}
+label{display:block;font:700 11px/1 var(--label);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mid);margin:20px 0 8px}
+label em{font-style:normal;letter-spacing:.08em}
+input,textarea,select{width:100%;font:400 15px/1.5 var(--body);padding:11px 13px;
+  border:3px solid var(--ink);background:var(--sunk);color:var(--ink)}
+input:focus,textarea:focus,select:focus{outline:none;background:var(--panel);
+  box-shadow:inset 0 0 0 3px var(--sunk)}
+textarea{resize:vertical;min-height:70px}
+.scale{display:flex;gap:7px}
+.scale button{flex:1;padding:15px 0 13px;font:400 17px/1 var(--display)}
+.scale button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
+.ends{display:flex;justify-content:space-between;font:700 10.5px/1 var(--label);
+  color:var(--mid);letter-spacing:.1em;text-transform:uppercase;margin-top:9px}
+.hint{font-size:13.5px;color:var(--mid);margin:9px 0 0;line-height:1.5}
+
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);
+  color:var(--panel);padding:13px 20px 11px;font:700 12px/1 var(--label);letter-spacing:.04em;
+  z-index:99;max-width:min(520px,90vw);text-align:center;line-height:1.5}
+.toast.bad{background:var(--rec)}
+.toast button{margin-left:14px;background:var(--panel);color:var(--ink);
+  border:2px solid var(--panel);box-shadow:none;padding:6px 9px 5px;font-size:10px}
+.toast button:hover{background:var(--sunk);border-color:var(--sunk)}
+
+/* entrance: one step, not a fade */
+.stag{animation:up .3s steps(4,end) backwards}
+@keyframes up{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:660px){
+  .wrap{padding:0 14px 90px}
+  .bar{margin:0 -14px 22px;padding:12px 14px}
+  .now{padding:22px 18px}
+  .clockwrap{text-align:left}
+  .row{grid-template-columns:92px 1fr;gap:8px}
+  .tbody{--off:100px}
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p style="color:var(--mid);padding:48px 0;font-family:var(--label);font-size:12px">READING STATE…</p></div>
+
+<script>
+const $ = (s,r=document)=>r.querySelector(s);
+const esc = s => (s??"").replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* the project .md files are markdown; render the inline bits, escaped first */
+const md = s => esc(s)
+  .replace(/`([^`]+)`/g,'<code>$1</code>')
+  .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+  .replace(/(^|[\s(])\*([^*\n]+)\*/g,'$1<i>$2</i>');
+const D = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+const LANE = {coursework:'--coursework',research:'--research',business:'--business',
+              side:'--side',software:'--software',work:'--work'};
+const DAY0 = 8, DAY1 = 23, SLOT = DAY1 - DAY0;   // one cell per hour of the envelope
+/* calendar kinds: label + colour. Order here is the row order in the trace.
+   A feed labelled in calendar_source.txt that isn't listed still gets a row. */
+const KIND = {
+  class:    ['classes',  'var(--sage)'],
+  tutoring: ['tutoring', 'var(--business)'],
+  plan:     ['on calendar', 'var(--ink)'],
+  other:    ['calendar', 'var(--mid)'],
+};
+const kindMeta = k => KIND[k] || [k, 'var(--mid)'];
+function kindsPresent(){
+  const found = [...new Set(S.fixed.filter(f=>!f.all_day).map(f=>f.kind))];
+  const known = Object.keys(KIND).filter(k=>found.includes(k));
+  return known.concat(found.filter(k=>!KIND[k]));
+}
+let S=null, tick=null, focusVal=null, drawerOpen=false, dragTask=null;
+const view = () => location.hash === '#plan' ? 'plan' : 'board';
+
+const hhmm = i => new Date(i).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
+const dur  = m => m>=60 ? (m/60).toFixed(1)+"h" : m+"m";
+const hue  = id => `var(${LANE[(S.projects.find(p=>p.id===id)||{}).lane] || '--mid'})`;
+const kb   = b => b>=1048576 ? (b/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(b/1024))+" KB";
+
+async function api(p,b){
+  const r = await fetch(p, b?{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(b)}:undefined);
+  return r.json();
+}
+function toast(msg,bad,action){
+  $('.toast')?.remove();
+  const e=document.createElement('div'); e.className='toast'+(bad?' bad':'');
+  e.textContent=msg;
+  if(action){
+    const b=document.createElement('button');
+    b.textContent=action.label;
+    b.onclick=()=>{ e.remove(); action.run(); };
+    e.appendChild(b);
+  }
+  document.body.appendChild(e);
+  setTimeout(()=>e.remove(), action?9000:3400);   // longer when there's a choice
+}
+async function load(){
+  S = await api('/api/state');
+  if(S.error){ $('#app').innerHTML=`<div class="void" style="margin-top:60px"><b>State didn’t parse</b>${esc(S.error)}</div>`; return; }
+  render();
+}
+
+/* which hour cells a span covers, as flat indices across the week */
+function cells(iso, minutes){
+  const d = new Date(iso), day = (d.getDay()+6)%7;
+  const s = d.getHours()+d.getMinutes()/60, e = s + minutes/60, out = [];
+  for(let h=DAY0; h<DAY1; h++) if(e>h && s<h+1) out.push(day*SLOT + (h-DAY0));
+  return out;
+}
+
+/* ───────────────────────── render ───────────────────────── */
+function render(){
+  if(view()==='plan'){ renderPlan(); return; }
+  const today = S.blocks.filter(b=>b.dow===S.today_dow);
+  const live  = !!S.active;
+  $('#app').innerHTML = `
+  ${topBar(live)}
+  <div class="stag">${nowPanel(today,live)}</div>
+  <div class="stag" style="animation-delay:.04s">
+    <h3 class="sec"><b>This week</b></h3>${trace()}
+  </div>
+  <div class="stag" style="animation-delay:.08s">
+    <h3 class="sec"><b>Today</b></h3>
+    ${today.length ? today.map(item).join("") : emptyToday()}
+  </div>
+  <div class="stag" style="animation-delay:.12s">
+    <h3 class="sec"><b>Deadlines</b></h3>${deadlines()}
+  </div>
+  <div class="stag" style="animation-delay:.16s">
+    <h3 class="sec"><b>Inbox</b></h3>${inbox()}
+  </div>
+  <div class="stag" style="animation-delay:.2s">
+    <h3 class="sec"><b>Projects</b></h3><div class="grid g2">${S.projects.map(project).join("")}</div>
+  </div>
+  <div class="stag" style="animation-delay:.24s">
+    <h3 class="sec"><b>Streaks</b></h3><div class="grid g3">${S.habits.map(habit).join("")}${meals()}</div>
+  </div>
+  ${S.recent.length?`<div class="stag"><h3 class="sec"><b>Log</b></h3><div class="box card"
+    style="--c:var(--ink)">${S.recent.map(logRow).join("")}</div></div>`:""}`;
+  runClock(); wireDrop(); if(drawerOpen) paintDrawer();
+}
+
+const openTasks = () => (S.tasks||[]).filter(t=>t.status!=='done');
+
+function topBar(live){
+  const cal = S.calendar || {};
+  const stale = cal.age_minutes==null || (!cal.live && cal.age_minutes > 720);
+  const calNote = cal.synced
+    ? (cal.live ? 'calendar live' : `calendar ${ago(cal.age_minutes)}`)
+    : 'calendar not synced';
+  return `<header class="bar">
+    <div class="mark"><span class="led ${live?'on':''}"></span>COMMAND</div>
+    <div class="spread"></div>
+    <div class="stat ${stale?'stale':''}" title="${esc(cal.source||'')}">${calNote}</div>
+    <div class="stat">${D[S.today_dow]} <b id="wall">${hhmm(S.now)}</b></div>
+    <div class="stat">· <b>${S.totals.minutes?dur(S.totals.minutes):'0m'}</b> logged</div>
+    <button class="sm tbtn" onclick="toggleDrawer()">Tasks${
+      openTasks().length?`<s>${openTasks().length}</s>`:''}</button>
+  </header>`;
+}
+const ago = m => m==null ? 'never synced'
+  : m < 60 ? `synced ${Math.max(1,m)}m ago`
+  : m < 1440 ? `synced ${Math.round(m/60)}h ago` : `synced ${Math.round(m/1440)}d ago`;
+
+function nowPanel(today, live){
+  if(live){
+    const c = hue(S.active.project);
+    return `<section class="window now" style="--c:${c}">
+      <div class="nowtop"><div style="flex:1;min-width:250px">
+        <div class="eyebrow"><span class="led on"></span>Recording</div>
+        <h2>${esc(S.active.label||S.active.project)}</h2>
+        ${S.active.first_action?`<div class="tape"><span class="cap">Doing</span>${md(S.active.first_action)}</div>`:""}
+      </div>
+      <div class="clockwrap"><div class="clock" id="run">0:00</div>
+        <div class="stat" style="justify-content:flex-end">since ${hhmm(S.active.started)}</div></div></div>
+      <div class="acts">
+        <button class="go" onclick="finish()"><span class="dot"></span>Stop and check out</button>
+        <button class="quiet" onclick="stopIt()">Discard this run</button></div></section>`;
+  }
+  const nx = today.find(b=>!b.done&&!b.past) || today.find(b=>!b.done);
+  if(nx){
+    const c = hue(nx.commitment);
+    return `<section class="window now" style="--c:${c}">
+      <div class="eyebrow" style="color:var(--mid)">Up next · ${hhmm(nx.start)}</div>
+      <h2>${esc(nx.summary)}</h2>
+      ${nx.first_action?`<div class="tape"><span class="cap">Start with</span>${md(nx.first_action)}</div>`:""}
+      <div class="acts"><button class="go" onclick='go(${JSON.stringify(nx)})'>
+        <span class="dot"></span>Start the clock</button></div></section>`;
+  }
+  const picks = S.projects.filter(p=>p.next).slice(0,4);
+  return `<section class="window now" style="--c:var(--research)">
+    <div class="eyebrow" style="color:var(--mid)">Nothing scheduled</div>
+    <h2>Pick a project and start the clock.</h2>
+    <div class="acts">${picks.map(p=>`<button onclick='go(${JSON.stringify(
+      {commitment:p.id,summary:p.name,first_action:p.next,id:null})})'
+      style="border-left:10px solid ${hue(p.id)}">${esc(p.name)}</button>`).join("")}</div>
+    <p class="hint">Unplanned work counts double — it tells the planner when you actually focus.</p>
+  </section>`;
+}
+
+/* ── the signature: one cell per hour, seven days across ── */
+function trace(){
+  const rows = S.projects.filter(p =>
+    p.hours_max>0 || p.minutes_this_week>0 || S.blocks.some(b=>b.commitment===p.id));
+  const n = new Date(S.now);
+  const frac = (((n.getDay()+6)%7) +
+    (Math.min(DAY1,Math.max(DAY0,n.getHours()+n.getMinutes()/60))-DAY0)/SLOT) / 7;
+
+  const paint = (lit, plan, cls) => [...Array(7)].map((_,d)=>
+    `<div class="day">${[...Array(SLOT)].map((_,h)=>{
+      const i = d*SLOT+h, hit = lit[i];
+      if(cls[i]) return `<s class="cls" title="${esc(cls[i])}"></s>`;
+      if(hit) return `<s class="on" style="opacity:${hit.o}" title="${esc(hit.t)}"></s>`;
+      if(plan[i]) return `<s class="plan" title="${esc(plan[i])}"></s>`;
+      return `<s></s>`;
+    }).join("")}</div>`).join("");
+
+  /* calendar events, one reference row per kind, so tutoring reads separately */
+  const refRow = kind => {
+    const [label, color] = kindMeta(kind);
+    const map = {};
+    S.fixed.filter(f=>f.kind===kind && !f.all_day).forEach(f =>
+      cells(f.start,(new Date(f.end)-new Date(f.start))/60000).forEach(i =>
+        map[i] = f.label + (f.location?` · ${f.location}`:'')));
+    if(!Object.keys(map).length) return "";
+    return `<div class="row fixed"><div class="nm" style="--c:${color}"><i></i>${label}</div>
+      <div class="week" style="--c:${color}">${paint({}, {}, map)}</div></div>`;
+  };
+
+  return `<div class="box trace" onclick="if(!event.target.closest('a'))location.hash='#plan'"
+    title="Open the planner" style="cursor:pointer"><div class="tbody">
+    <div class="row"><span></span><div class="dayhdr">
+      ${D.map((d,i)=>`<span class="${i===S.today_dow?'td':''}">${d}</span>`).join("")}</div></div>
+
+    ${kindsPresent().map(refRow).join("")}
+
+    ${rows.map(p=>{
+      const c = hue(p.id), lit = {}, plan = {};
+      S.week_sessions.filter(s=>s.project===p.id).forEach(s=>{
+        const o = s.focus ? (0.4 + s.focus*0.12).toFixed(2) : 0.8;
+        cells(s.start,s.minutes).forEach(i=>{
+          if(!lit[i] || lit[i].o < o)
+            lit[i] = {o, t:`${s.did||p.name} · ${dur(s.minutes)}${s.focus?` · focus ${s.focus}/5`:''}`};
+        });
+      });
+      S.blocks.filter(b=>b.commitment===p.id&&!b.done).forEach(b=>
+        cells(b.start,b.minutes).forEach(i=>plan[i] = `planned · ${b.first_action||b.summary}`));
+      return `<div class="row ${p.minutes_this_week?'live':''}">
+        <div class="nm" style="--c:${c}"><i></i>${esc(p.id)}</div>
+        <div class="week" style="--c:${c}">${paint(lit, plan, {})}</div></div>`;
+    }).join("")}
+    <div class="head" style="left:calc(var(--off) + (100% - var(--off)) * ${frac.toFixed(4)})"></div>
+  </div>
+  <div class="legend">
+    <b><i></i>logged — solid means high focus</b>
+    <b><i class="p"></i>queued, not on the calendar</b>
+    ${kindsPresent().map(k=>`<b><i style="background:${kindMeta(k)[1]}"></i>${
+      kindMeta(k)[0]}</b>`).join("")}
+    <b><i class="n"></i>now</b>
+    <b style="margin-left:auto">one cell = one hour · ${DAY0}:00–${DAY1}:00 ·
+      <a href="#plan" style="color:var(--rec)">open planner</a></b>
+  </div></div>`;
+}
+
+function item(b){
+  return `<div class="box item ${b.done?'done':''}" style="--c:${hue(b.commitment)}">
+    <div class="tm">${hhmm(b.start)}</div>
+    <div style="flex:1"><div class="it">${esc(b.summary)}</div>
+      ${b.first_action?`<div class="ia">${md(b.first_action)}</div>`:""}</div>
+    ${b.done?`<span class="tag" style="color:var(--ok)">done</span>`
+      :`<button class="sm" onclick='go(${JSON.stringify(b)})'>Start</button>`}</div>`;
+}
+function emptyToday(){
+  return `<div class="void"><b>No blocks today.</b>
+    Drop a syllabus in the inbox below and run <code>/intake</code> — it files the document,
+    pulls out every due date, and lays work backward from each one. Until then, start any
+    project below; the clock still runs.</div>`;
+}
+
+/* ── inbox: the cartridge slot ── */
+function inbox(){
+  const q = S.inbox || [];
+  return `<div id="dropwrap">
+    <button type="button" class="drop" id="drop">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M10 2h4v8h4l-6 7-6-7h4z"></path>
+        <path fill="currentColor" d="M2 19h20v3H2z"></path></svg>
+      <strong>Drop a syllabus, assignment, or spec here</strong>
+      <span>Or click to choose a file · PDF, Word, slides, images, text</span>
+    </button>
+    <input type="file" id="picker" multiple hidden>
+    ${q.length?`<div class="queue">${q.map(f=>`<div class="file">
+      <span class="fn">${esc(f.name)}</span>
+      <span class="fs">${kb(f.size)}</span>
+      <button class="sm quiet" onclick="unqueue('${esc(f.name).replace(/'/g,"\\'")}')">Remove</button>
+    </div>`).join("")}</div>
+    <p class="note">${q.length} file${q.length>1?'s':''} waiting in <code>.agent/inbox/</code>.
+      Run <code>/intake</code> in Claude Code to file each one and turn its dates into blocks.</p>`
+    :`<p class="note">Files land in <code>.agent/inbox/</code>. Nothing reads them until you
+      run <code>/intake</code> in Claude Code.</p>`}
+  </div>`;
+}
+function wireDrop(){
+  const zone = $('#drop'), picker = $('#picker');
+  if(!zone) return;
+  zone.onclick = () => picker.click();
+  picker.onchange = () => { send([...picker.files]); picker.value=""; };
+  let depth = 0;
+  const stop = e => { e.preventDefault(); e.stopPropagation(); };
+  ['dragenter','dragover'].forEach(ev => zone.addEventListener(ev, e => {
+    stop(e); if(ev==='dragenter') depth++; zone.classList.add('hot');
+  }));
+  zone.addEventListener('dragleave', e => { stop(e); if(--depth<=0) zone.classList.remove('hot'); });
+  zone.addEventListener('drop', e => {
+    stop(e); depth=0; zone.classList.remove('hot');
+    send([...(e.dataTransfer?.files||[])]);
+  });
+}
+/* a file dropped outside the zone would otherwise navigate away from the page.
+   Bound once — wireDrop() runs on every render. */
+['dragover','drop'].forEach(ev => document.addEventListener(ev, e => e.preventDefault()));
+async function send(files){
+  if(!files.length) return;
+  let ok = 0, last = "";
+  for(const f of files){
+    const b64 = await new Promise((res,rej)=>{
+      const r = new FileReader();
+      r.onload = ()=>res(String(r.result).split(',')[1]);
+      r.onerror = rej; r.readAsDataURL(f);
+    });
+    const r = await api('/api/inbox',{name:f.name,data:b64});
+    if(r.ok){ ok++; last = r.message; } else toast(`${f.name}: ${r.message}`, true);
+  }
+  if(ok) toast(ok===1 ? last : `${ok} files are in the inbox`);
+  load();
+}
+async function unqueue(name){
+  const r = await api('/api/inbox/remove',{name});
+  toast(r.ok ? r.message : r.message, !r.ok);
+  load();
+}
+
+function habit(h){
+  const c = h.id==='gym' ? 'var(--software)' : 'var(--side)';
+  const n = h.stretch || h.target;
+  const met = h.count >= h.target;
+  return `<div class="box card" style="--c:${c}">
+    <div class="ctop"><h4 style="text-transform:capitalize">${h.id}</h4>
+      <span class="tag">${h.count}/${h.target}</span></div>
+    <div class="pips">${[...Array(n)].map((_,i)=>
+      `<s class="${i<h.count?'f':(i>=h.target?'x':'')}"></s>`).join("")}</div>
+    <div class="mnum"><span${met?' style="color:var(--sage)"':''}>${met?'target met':`${h.target-h.count} to go`}</span>
+      <span>${n} = stretch</span></div>
+    <div class="acts" style="margin-top:14px">
+      <button class="sm" onclick="quick('${h.id}')">Log ${h.id}</button></div></div>`;
+}
+
+function meals(){
+  return `<div class="box card" style="--c:var(--business)">
+    <div class="ctop"><h4>Meals &amp; people</h4><span class="tag">${S.meals_this_week||0} this week</span></div>
+    <div class="mnum" style="margin-top:15px"><span>Not a target — just the record</span></div>
+    <div class="acts" style="margin-top:14px">
+      <button class="sm" onclick="quick('meal')">Log a meal</button>
+      <button class="sm quiet" onclick="quick('social')">Something social</button></div></div>`;
+}
+
+function deadlines(){
+  if(!S.deadlines.length) return `<div class="void"><b>Nothing due that I know about.</b>
+    Deadlines arrive through <code>/intake</code>. Drop a syllabus in the inbox below and the
+    runway shows up here.</div>`;
+  return `<div class="grid g3">${S.deadlines.map(d=>{
+    const n = Math.floor(d.days_left);
+    return `<div class="box card" style="--c:${hue(d.commitment)}">
+      <div class="dl">
+        <div><h4>${esc(d.title)}</h4><div class="mnum" style="margin-top:7px">
+          <span>${esc(d.commitment)}${d.est_hours?` · ${d.est_hours}h`:''}</span></div></div>
+        <div class="cd ${n<2?'hot':n<5?'soon':''}">${n<0?'late':n+'d'}</div></div></div>`;
+  }).join("")}</div>`;
+}
+
+function project(p){
+  const c = hue(p.id), h = p.minutes_this_week/60;
+  const seg = Math.max(p.hours_max||1, 1)*2;                  // half-hour segments
+  const fill = Math.round(h*2), goal = Math.round((p.hours_min||0)*2);
+  return `<div class="box card" style="--c:${c}">
+    <div class="ctop"><h4>${esc(p.name)}</h4><span class="tag">${esc(p.lane)}</span></div>
+    <div class="meter">${[...Array(seg)].map((_,i)=>
+      `<s class="${i<fill?'f':(i<goal?'g':'')}"></s>`).join("")}</div>
+    <div class="mnum"><span>${h.toFixed(1)}h logged</span>
+      <span>${p.hours_max?`${p.hours_min}–${p.hours_max}h/wk`:'no budget'}</span></div>
+    <div class="next" contenteditable="true" data-p="${p.id}" onblur="saveNext(this)"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.blur()}"
+      >${md(p.next)}</div>
+    ${p.blockers.length?`<div class="flag"><span>!</span><span>${md(p.blockers[0])}${
+      p.blockers.length>1?` <span style="opacity:.7">+${p.blockers.length-1} more</span>`:''}</span></div>`:""}
+    <div class="acts" style="margin-top:16px">
+      <button class="sm" onclick='go(${JSON.stringify(
+        {commitment:p.id,summary:p.name,first_action:p.next,id:null})})'>Start</button>
+      <button class="sm quiet" onclick="openCheckout('${p.id}')">Log past work</button></div></div>`;
+}
+
+function logRow(r){
+  return `<div class="log" style="--c:${hue(r.project)}"><i></i>
+    <div><div style="font-size:14.5px">${esc(r.did)}</div>
+      <div class="meta">${r.when} · ${esc(r.project)}${r.tool==='codex'?' · codex':''}</div></div>
+    <div class="rt">${r.actual_minutes?dur(r.actual_minutes):'—'}${r.focus?` · ${r.focus}/5`:''}</div></div>`;
+}
+
+/* ───────────────────────── tasks ───────────────────────── */
+function taskRow(t){
+  const done = t.status==='done';
+  const chips = [];
+  if(t.est_minutes) chips.push(`<span class="chip">${dur(t.est_minutes)}</span>`);
+  if(t.due){
+    const n = Math.floor(t.days_left);
+    chips.push(`<span class="chip ${n<1?'hot':n<3?'due':''}">${
+      n<0?'overdue':n===0?'due today':`due ${new Date(t.due).toLocaleDateString([],
+        {weekday:'short',month:'numeric',day:'numeric'})}`}</span>`);
+  }
+  if(t.status==='scheduled') chips.push(`<span class="chip sch">${
+    (t.blocks||[]).length} block${(t.blocks||[]).length===1?'':'s'} queued</span>`);
+  return `<div class="task ${done?'gone':''}" draggable="${!done}" data-task="${t.id}">
+    <button class="tick" aria-pressed="${done}" title="${done?'Reopen':'Tick off'}"
+      onclick="tickTask('${t.id}',${done})">${done?'x':''}</button>
+    <div style="flex:1;min-width:0">
+      <div class="tt">${esc(t.title)}</div>
+      ${t.first_action?`<div class="tfa">${md(t.first_action)}</div>`:
+        `<div class="tfa" style="color:var(--rec)">No first action — add one to schedule it</div>`}
+      ${chips.length?`<div class="chips">${chips.join("")}</div>`:""}
+    </div>
+    <button class="tdel" title="Delete" onclick="delTask(this,'${t.id}')">\u2715</button>
+  </div>`;
+}
+
+let showDone = false;
+function taskGroups(list){
+  const live = list.filter(t=>t.status!=='done');
+  const done = list.filter(t=>t.status==='done');
+  const earlier = S.tasks_done_earlier || 0;
+
+  const groups = () => {
+    if(!live.length) return `<div class="void" style="box-shadow:none"><b>Nothing open.</b>
+      ${done.length?'Everything on this week\u2019s list is ticked off.'
+        :'Add a task below, or let <code>/intake</code> make them from a syllabus.'}</div>`;
+    const by = {};
+    live.forEach(t => (by[t.project] = by[t.project] || []).push(t));
+    return Object.entries(by).map(([pid,ts])=>{
+      const p = S.projects.find(x=>x.id===pid) || {name:pid};
+      return `<div class="tgroup">
+        <h5 style="--c:${hue(pid)}"><i></i>${esc(p.name)}<b>${ts.length} open</b></h5>
+        ${ts.map(taskRow).join("")}</div>`;
+    }).join("");
+  };
+
+  /* Finished work is worth seeing — but not above the work that isn't done. */
+  const doneSection = () => {
+    if(!done.length && !earlier) return "";
+    return `<button class="donehdr" onclick="showDone=!showDone;paintTasks()">
+        ${showDone?'\u25be':'\u25b8'} Completed \u00b7 ${done.length} this week
+        <s>${earlier?`+${earlier} earlier`:''}</s></button>
+      ${showDone ? (done.length ? done.map(taskRow).join("")
+        : `<div class="void" style="box-shadow:none">Nothing finished yet this week.
+           ${earlier} older task${earlier===1?'':'s'} \u2014 see them with
+           <code>task.py list --all</code>.</div>`) : ""}`;
+  };
+  return groups() + doneSection();
+}
+/* one repaint used by both surfaces */
+function paintTasks(){
+  const el = $('#dbody') || $('#planlist');
+  if(!el) return;
+  el.innerHTML = (el.id==='dbody')
+    ? taskGroups(S.tasks||[]) : taskGroups(S.tasks||[]);
+  wireDrag();
+}
+
+function addForm(){
+  return `<div class="tadd">
+    <input id="t-title" placeholder="What needs doing?"
+      onkeydown="if(event.key==='Enter')addTask()">
+    <input id="t-fa" placeholder="First action — the opener a block will carry">
+    <div class="two">
+      <select id="t-proj">${S.projects.map(p=>
+        `<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
+      <input id="t-est" placeholder="Estimate — 90m, 2h">
+    </div>
+    <div class="two">
+      <input id="t-due" type="date">
+      <button class="go" onclick="addTask()">Add task</button>
+    </div></div>`;
+}
+
+async function addTask(){
+  const title = $('#t-title').value.trim();
+  if(!title){ toast("A task needs a title.",true); $('#t-title').focus(); return; }
+  const r = await api('/api/task',{op:'add', title,
+    project:$('#t-proj').value, est:$('#t-est').value.trim(),
+    due:$('#t-due').value, first_action:$('#t-fa').value.trim()});
+  if(!r.ok){ toast(r.message,true); return; }
+  ['#t-title','#t-fa','#t-est','#t-due'].forEach(k=>$(k).value="");
+  toast("Task added."); await load(); $('#t-title')?.focus();
+}
+async function tickTask(id,done){
+  const r = await api('/api/task',{op:done?'reopen':'done', id});
+  if(!r.ok) toast(r.message,true);
+  load();
+}
+/* Two clicks to delete. One stray click used to be enough to lose a task, and
+   this table is the only record that the work exists. */
+async function delTask(btn, id){
+  if(btn.dataset.armed !== '1'){
+    document.querySelectorAll('.tdel.armed').forEach(disarm);
+    btn.dataset.armed = '1';
+    btn.classList.add('armed');
+    btn.textContent = 'Delete?';
+    btn.dataset.timer = setTimeout(()=>disarm(btn), 4000);
+    return;
+  }
+  disarm(btn);
+  const r = await api('/api/task',{op:'delete', id});
+  if(!r.ok){ toast(r.message, true); return; }
+  toast("Task deleted.", false, {label:'Undo', run:()=>undoDelete(id)});
+  load();
+}
+async function undoDelete(id){
+  const r = await api('/api/task',{op:'restore', id});
+  toast(r.ok ? "Task restored." : r.message, !r.ok);
+  load();
+}
+function disarm(btn){
+  clearTimeout(btn.dataset.timer);
+  btn.dataset.armed = '0';
+  btn.classList.remove('armed');
+  btn.textContent = '\u2715';
+}
+
+/* ── drawer ── */
+function toggleDrawer(){ drawerOpen ? closeDrawer() : openDrawer(); }
+function openDrawer(){
+  drawerOpen = true;
+  const veil = document.createElement('div');
+  veil.className = 'veil'; veil.onclick = closeDrawer;
+  const d = document.createElement('aside');
+  d.className = 'drawer'; d.id = 'drawer';
+  d.innerHTML = `<div class="dhead"><h2>Tasks</h2>
+      <button class="x" onclick="closeDrawer()" title="Close (Esc)">\u2715</button></div>
+    <div class="dbody" id="dbody"></div>
+    <div class="dfoot" id="dfoot"></div>`;
+  document.body.append(veil, d);
+  paintDrawer();
+}
+function closeDrawer(){
+  drawerOpen = false;
+  $('#drawer')?.remove(); $('.veil')?.remove();
+}
+function paintDrawer(){
+  const body = $('#dbody'); if(!body) return;
+  body.innerHTML = taskGroups(S.tasks||[]);
+  $('#dfoot').innerHTML = addForm();
+  wireDrag();
+}
+
+/* ───────────────────────── planner ───────────────────────── */
+function renderPlan(){
+  const wk = new Date(S.week_start);
+  const days = [...Array(7)].map((_,i)=>{
+    const d = new Date(wk); d.setDate(d.getDate()+i); return d;
+  });
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${
+    String(d.getDate()).padStart(2,'0')}`;
+
+  $('#app').innerHTML = `
+  <div class="pbar">
+    <button class="sm" onclick="location.hash=''">\u2190 Board</button>
+    <h1>Planner</h1>
+    <div class="spread" style="flex:1"></div>
+    <div class="stat">week of ${wk.toLocaleDateString([],{month:'short',day:'numeric'})}</div>
+    <div class="stat">· <b>${openTasks().length}</b> open tasks</div>
+  </div>
+  <div class="plan">
+    <div>
+      <div class="pdays">${days.map((d,i)=>{
+        const evs = S.fixed.filter(f=>f.dow===i && !f.all_day);
+        const allday = S.fixed.filter(f=>f.dow===i && f.all_day);
+        const blocks = S.blocks.filter(b=>b.dow===i);
+        const rows = [...evs.map(e=>({t:e.start,el:
+            `<div class="ev" title="${esc(e.label)}${e.location?` \u00b7 ${esc(e.location)}`:''}"
+              style="--c:${kindMeta(e.kind)[1]}">
+              <span class="at">${hhmm(e.start)}</span>
+              <span class="tx">${esc(e.label)}</span></div>`})),
+          ...blocks.map(b=>({t:b.start,el:
+            `<div class="ev block" style="--c:${hue(b.commitment)}"
+              title="${esc(b.summary)}${b.first_action?` \u2014 ${esc(b.first_action)}`:''}">
+              <span class="at">${hhmm(b.start)}</span><b>${esc(b.summary)}</b></div>`}))]
+          .sort((a,b)=>a.t<b.t?-1:1);
+        return `<div class="pday ${i===S.today_dow?'today':''}" data-date="${iso(d)}">
+          <h6><span>${D[i]}</span><span>${d.getDate()}</span></h6>
+          ${allday.map(a=>`<div class="allday" title="${esc(a.label)}">${esc(a.label)}</div>`).join("")}
+          <div class="slots">${rows.map(r=>r.el).join("")}</div>
+          <div class="pdrop">drop a task</div></div>`;
+      }).join("")}</div>
+      <p class="note">Dragging a task here queues 50-minute blocks around your classes
+        and stops at ${S.envelope.max_blocks_per_day||4} a day. They land in
+        <code>pending_calendar.jsonl</code> \u2014 nothing is written to Google Calendar
+        until you approve the week.</p>
+    </div>
+    <div>
+      <h3 class="sec" style="margin-top:0"><b>Tasks</b></h3>
+      <div id="planlist">${taskGroups(S.tasks||[])}</div>
+      <div class="box card" style="--c:var(--ink);margin-top:14px">${addForm()}</div>
+    </div>
+  </div>`;
+  runClock(); wireDrag(); wirePlanDrop();
+}
+
+/* ── drag a task onto a day ── */
+function wireDrag(){
+  document.querySelectorAll('.task[draggable=true]').forEach(el=>{
+    el.ondragstart = e => {
+      dragTask = el.dataset.task;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragTask);
+    };
+    el.ondragend = () => { dragTask = null; el.classList.remove('dragging'); };
+  });
+}
+function wirePlanDrop(){
+  document.querySelectorAll('.pday').forEach(day=>{
+    day.ondragover = e => { if(dragTask){ e.preventDefault(); day.classList.add('over'); } };
+    day.ondragleave = () => day.classList.remove('over');
+    day.ondrop = async e => {
+      e.preventDefault(); day.classList.remove('over');
+      const id = dragTask || e.dataTransfer.getData('text/plain');
+      dragTask = null;
+      if(!id) return;
+      const r = await api('/api/schedule',{task:id, date:day.dataset.date});
+      toast(r.message, !r.ok);
+      load();
+    };
+  });
+}
+
+/* ───────────────────────── actions ───────────────────────── */
+function runClock(){
+  clearInterval(tick);
+  const paint = ()=>{
+    const w = $('#wall'); if(w) w.textContent = hhmm(new Date().toISOString());
+    if(!S.active) return;
+    const el = $('#run'); if(!el) return;
+    const s = Math.max(0,(Date.now()-new Date(S.active.started))/1000);
+    el.textContent = `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+  };
+  paint(); tick = setInterval(paint,1000);
+}
+async function go(b){
+  await api('/api/start',{project:b.commitment,block_id:b.id,label:b.summary,first_action:b.first_action});
+  await load(); window.scrollTo({top:0,behavior:'smooth'});
+}
+async function stopIt(){ await api('/api/stop',{}); await load(); }
+function finish(){
+  const m = Math.max(1,Math.round((Date.now()-new Date(S.active.started))/60000));
+  openCheckout(S.active.project, m, S.active.block_id);
+}
+async function saveNext(el){
+  const id = el.dataset.p, text = el.textContent.trim();
+  const p = S.projects.find(x=>x.id===id);
+  if(!p || text === (p.next||"")) return;
+  const r = await api('/api/next',{project:id,next:text});
+  toast(r.ok?"Next step saved":"Didn’t save: "+r.message, !r.ok);
+  if(r.ok) p.next = text;
+}
+
+/* a one-field window, so nothing here uses a blocking browser dialog */
+function ask(title, label, placeholder){
+  return new Promise(res=>{
+    const s = document.createElement('div');
+    s.className = 'scrim';
+    const close = v => { s.remove(); res(v); };
+    s.onclick = e => { if(e.target===s) close(null); };
+    s.innerHTML = `<div class="window modal"><h2>${esc(title)}</h2>
+      <label>${esc(label)}</label><input id="ask-in" placeholder="${esc(placeholder)}">
+      <div class="acts" style="margin-top:22px">
+        <button class="go" id="ask-ok">Log it</button>
+        <button class="quiet" id="ask-no">Cancel</button></div></div>`;
+    document.body.appendChild(s);
+    const input = $('#ask-in', s);
+    $('#ask-ok',s).onclick = () => close(input.value.trim());
+    $('#ask-no',s).onclick = () => close(null);
+    input.onkeydown = e => { if(e.key==='Enter') close(input.value.trim()); };
+    setTimeout(()=>input.focus(),40);
+  });
+}
+async function quick(kind){
+  let detail="", who="";
+  if(kind==='meal'){
+    const w = await ask("Log a meal","Eating with anyone?","Leave blank for solo");
+    if(w===null) return;
+    who = w; detail = w ? "meal with "+w : "meal";
+  } else if(kind==='social'){
+    const d = await ask("Something social","What was it?","Dinner, climbing, a call…");
+    if(d===null || !d) return;
+    detail = d;
+  } else {
+    const d = await ask(`Log ${kind}`, kind==='gym'?"What did you train?":"What cardio?",
+      kind==='gym'?"Push, pull, legs…":"5k, bike, stairs…");
+    if(d===null || !d) return;
+    detail = d;
+  }
+  const r = await api('/api/life',{kind,detail,with:who});
+  toast(r.ok?r.message.replace("logged: ","Logged "):("Didn’t log: "+r.message), !r.ok);
+  load();
+}
+
+/* ── checkout ── */
+function openCheckout(project, minutes, blockId){
+  focusVal = null;
+  const cur = S.projects.find(p=>p.id===project);
+  const s = document.createElement('div');
+  s.className='scrim'; s.onclick = e => { if(e.target===s) s.remove(); };
+  s.innerHTML = `<div class="window modal">
+    <h2>Check out</h2>
+    <p class="hint">Two things carry weight: an honest focus number, and a next step you could
+      start without thinking.</p>
+    <label>Project</label>
+    <select id="c-proj">${S.projects.map(p=>
+      `<option value="${p.id}"${p.id===project?' selected':''}>${esc(p.name)}</option>`).join("")}</select>
+    <label>Focus</label>
+    <div class="scale" id="c-focus">${[1,2,3,4,5].map(n=>
+      `<button type="button" aria-pressed="false" onclick="pick(${n})">${n}</button>`).join("")}</div>
+    <div class="ends"><span>scattered</span><span>locked in</span></div>
+    <label>Minutes</label><input id="c-min" type="number" min="1" value="${minutes||50}">
+    <label>What changed?</label>
+    <textarea id="c-did" placeholder="Something concrete — not &quot;worked on it&quot;"></textarea>
+    <label>Next step</label>
+    <textarea id="c-next" placeholder="The first action for next time">${esc(cur?cur.next:"")}</textarea>
+    <p class="hint">This becomes the opening line of your next block on this project.</p>
+    <label>Blockers <em>optional, comma-separated</em></label><input id="c-block">
+    <div class="acts" style="margin-top:26px">
+      <button class="go" onclick="save('${blockId||""}')">Save</button>
+      <button class="quiet" onclick="this.closest('.scrim').remove()">Cancel</button></div></div>`;
+  document.body.appendChild(s);
+  setTimeout(()=>$('#c-did').focus(),50);
+}
+function pick(n){
+  focusVal=n;
+  [...document.querySelectorAll('#c-focus button')].forEach((b,i)=>
+    b.setAttribute('aria-pressed',String(i+1===n)));
+}
+async function save(blockId){
+  const next = $('#c-next').value.trim();
+  if(!next){ toast("Needs a next step — it’s the cold-start opener.",true); $('#c-next').focus(); return; }
+  const r = await api('/api/checkout',{
+    project:$('#c-proj').value, focus:focusVal,
+    actual_minutes:parseInt($('#c-min').value,10)||null,
+    did:$('#c-did').value.trim(), next,
+    blockers:$('#c-block').value.trim(), block_id:blockId||null});
+  if(!r.ok){ toast("Rejected: "+r.message,true); return; }
+  $('.scrim')?.remove(); toast("Logged."); load();
+}
+
+addEventListener('hashchange', () => { closeDrawer(); if(S) render(); });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){ if($('.scrim')) $('.scrim').remove(); else closeDrawer(); return; }
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)
+    || e.target.isContentEditable;
+  if(!typing && !$('.scrim') && (e.key==='t'||e.key==='T')){ e.preventDefault(); toggleDrawer(); }
+});
+load();
+setInterval(()=>{
+  const busy = $('.scrim') || document.activeElement.isContentEditable
+    || /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)
+    || $('#drop')?.classList.contains('hot') || dragTask;
+  if(!busy) load();
+}, 60000);
+</script>
+</body>
+</html>
