@@ -453,9 +453,11 @@ const openTasks = () => (S.tasks||[]).filter(t=>t.status!=='done');
 
 function topBar(live){
   const cal = S.calendar || {};
-  const stale = cal.age_minutes==null || (!cal.live && cal.age_minutes > 720);
-  const calNote = cal.synced
-    ? (cal.live ? 'calendar live' : `calendar ${ago(cal.age_minutes)}`)
+  const stale = cal.source !== 'demo'
+    && (cal.age_minutes==null || (!cal.live && cal.age_minutes > 720));
+  const demo = cal.source === 'demo';
+  const calNote = demo ? 'demo calendar \u2014 sample data'
+    : cal.synced ? (cal.live ? 'calendar live' : `calendar ${ago(cal.age_minutes)}`)
     : 'calendar not synced';
   return `<header class="bar">
     <div class="mark"><span class="led ${live?'on':''}"></span>COMMAND</div>

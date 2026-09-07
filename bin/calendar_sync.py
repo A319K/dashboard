@@ -26,6 +26,13 @@ Two ways in, because they fail differently:
 
         calendar_sync.py --from-mcp < events.json
 
+  3. Demo data, to see what a populated week looks like before wiring anything:
+
+        calendar_sync.py --demo
+
+     Generated relative to the current week, so it never goes stale. Re-run any
+     real sync to replace it.
+
 The secret ICS address is a credential: anyone holding it can read the whole
 calendar. calendar_source.txt is gitignored and is never printed by this script.
 """
@@ -298,6 +305,40 @@ def from_mcp(payload: str) -> list[dict]:
     return out
 
 
+# A plausible week: two lecture courses, a lab, a recurring tutoring slot, and
+# an all-day event. Anchored to the current Monday so it is never out of date —
+# a committed fixture with absolute dates would show an empty grid a week later.
+DEMO = [
+    (0, "09:00", "10:15", "MATH 201 Lec", "Hall 214"),
+    (0, "13:00", "14:15", "Intro to CS Lec", "Science 130"),
+    (0, "18:30", "19:30", "Tutoring", ""),
+    (1, "11:00", "12:50", "Intro to CS Lab", "Science 012"),
+    (2, "09:00", "10:15", "MATH 201 Lec", "Hall 214"),
+    (2, "13:00", "14:15", "Intro to CS Lec", "Science 130"),
+    (2, "18:30", "19:30", "Tutoring", ""),
+    (3, "14:00", "15:15", "Writing Seminar", "Library 3"),
+    (4, "09:00", "10:15", "MATH 201 Lec", "Hall 214"),
+]
+
+
+def demo_events() -> list[dict]:
+    now = datetime.now(TZ)
+    monday = (now - timedelta(days=now.weekday())).replace(
+        hour=0, minute=0, second=0, microsecond=0)
+    out = []
+    for dow, start, end, summary, where in DEMO:
+        day = monday + timedelta(days=dow)
+        sh, sm = map(int, start.split(":"))
+        eh, em = map(int, end.split(":"))
+        out.append(event(f"demo-{dow}-{start}", summary,
+                         day.replace(hour=sh, minute=sm),
+                         day.replace(hour=eh, minute=em), where))
+    birthday = monday + timedelta(days=5)
+    out.append(event("demo-allday", "A friend\u2019s birthday",
+                     birthday, birthday + timedelta(days=1), "", all_day=True))
+    return out
+
+
 def write(events: list[dict], source: str) -> None:
     events.sort(key=lambda e: e["start"])
     CACHE.write_text(json.dumps({
@@ -318,8 +359,15 @@ def main() -> int:
     p.add_argument("--ics", help="Secret iCal URL. Defaults to calendar_source.txt.")
     p.add_argument("--from-mcp", action="store_true",
                    help="Read a list_events JSON payload on stdin instead.")
+    p.add_argument("--demo", action="store_true",
+                   help="Write a sample week, anchored to today. For trying the UI.")
     p.add_argument("--days", type=int, default=28, help="Window to expand, from Monday.")
     args = p.parse_args()
+
+    if args.demo:
+        write(demo_events(), "demo")
+        print("  this is sample data \u2014 run a real sync to replace it")
+        return 0
 
     if args.from_mcp:
         write(from_mcp(sys.stdin.read()), "google-mcp")

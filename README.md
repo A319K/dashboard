@@ -40,10 +40,16 @@ cd ~/Documents/.agent
 cp examples/commitments.example.yaml commitments.yaml
 cp examples/deadlines.example.yaml   deadlines.yaml
 
+./bin/calendar_sync.py --demo    # optional: a sample week, to see it populated
 ./bin/dash
 ```
 
 Then open http://127.0.0.1:7717/.
+
+The `--demo` step fills the week view with a plausible sample timetable so the
+UI isn't empty on first run. It's generated relative to the current week, so it
+never goes stale, and the header labels it as sample data. Any real sync
+replaces it.
 
 Edit `commitments.yaml` to list your own projects. The `id` of each one is what
 everything else keys off, and `lane` picks its colour.
