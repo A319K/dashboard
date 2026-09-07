@@ -129,10 +129,30 @@ logs.
 
 ## Using it with Claude Code
 
-The repo is designed to be driven by an agent as well as by hand. The
-`bin/` CLIs are the interface: they validate input, so an agent can't corrupt
-state by writing files directly. If you use Claude Code, point a skill at
-`bin/task.py` and `bin/log_session.py` and it can plan and check out your week.
+The CLIs are the interface: they validate input, so an agent can't corrupt state
+by writing files directly. `skills/` ships six workflows that turn them into a
+system:
+
+```bash
+cp -r skills/* ~/.claude/skills/
+cp CLAUDE.md.example ~/Documents/CLAUDE.md   # then edit it
+```
+
+| Skill | What it does |
+|---|---|
+| `/checkin` | Loads state at the start of a session — next step, blockers, deadlines |
+| `/checkout` | Records the session, ticks off finished tasks, updates project state |
+| `/intake` | A document becomes deadlines, tasks, and scheduled blocks |
+| `/plan-week` | Tasks and budgets become a proposed week, for approval |
+| `/review` | Finds where focus actually happens, so next week's plan adjusts |
+| `/log-life` | Records habits and social plans, reports streaks |
+
+They ship generic on purpose — `course1`, `research`, `side-project` — so they
+work before you've configured anything, and get better as you make them specific
+to your own courses and projects. See [skills/README.md](skills/README.md).
+
+Setting up your calendar, filling in `commitments.yaml`, and adapting the skills
+are all things you can just ask your own Claude to do once the repo is cloned.
 
 ## License
 

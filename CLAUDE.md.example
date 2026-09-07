@@ -1,0 +1,83 @@
+# CLAUDE.md — workspace brief
+
+Copy this to `CLAUDE.md` in the directory you work from (typically
+`~/Documents`), then edit it. It's the file Claude Code reads first, and its job
+is to say what this workspace is and where the truth lives.
+
+---
+
+## The system
+
+`.agent/` is a planning layer. The chain it turns on:
+
+**a document → deadlines + tasks → blocks → sessions**
+
+`/intake` files a document and extracts deadlines and tasks. `/plan-week` (or
+dragging a task onto a day in the dashboard) turns tasks into 50-minute blocks.
+`/checkout` records what actually happened. `/review` reads the record weekly and
+adjusts the next plan.
+
+Every step carries the task's **first action** forward verbatim. The cold start
+is the bottleneck, not the work.
+
+## Start here
+
+Read `.agent/STATE.md` for the current week, then
+`.agent/projects/<slug>.md` for whatever you're about to touch. Those files —
+not the source code — are the truth about where things stand.
+
+## Layout
+
+```
+.agent/
+├── STATE.md            # the hot file — this week at a glance
+├── PROFILE.md          # learned facts about how you actually work
+├── commitments.yaml    # weekly time budgets + scheduling envelope
+├── deadlines.yaml      # extracted deadlines, source-linked
+├── tasks.jsonl         # the task table. Only bin/task.py writes it
+│                       # deletes are recoverable — `task.py restore <id>`
+├── calendar.json       # calendar cache the dashboard reads
+├── calendar_source.txt # secret iCal URLs, gitignored
+├── pending_calendar.jsonl  # queued blocks awaiting approval
+├── projects/<slug>.md  # rolling per-project state
+├── log/                # sessions.jsonl · life.jsonl
+├── inbox/              # drop documents here; /intake files them
+├── dashboard/          # local UI: `.agent/bin/dash`
+└── bin/                # the CLIs — the only things that write state
+```
+
+## Your projects
+
+<!-- List them. For each: what it is, and which file to read first.
+     This map is what lets a session route a request to the right place. -->
+
+| Path | What it is | Read first |
+|---|---|---|
+| `example-project/` | … | `example-project/CLAUDE.md` |
+
+**Rule zero:** every real project has its own `CLAUDE.md` that is the authority
+for that project. Read it before touching anything there. This file never
+overrides a project file; it only says which one to read.
+
+## Hard constraints
+
+<!-- Things a session would otherwise rediscover the expensive way. Add to this
+     list the moment you learn something; that's what makes it worth having. -->
+
+- **`.env` files are never committed, never printed, never sent anywhere.**
+- `.agent/calendar_source.txt` is a credential — the secret iCal address grants
+  read access to a whole calendar.
+- <!-- e.g. "the X API is rate-limited; test with USE_MOCK=true" -->
+- <!-- e.g. "pushes from repo Y are done by hand" -->
+
+## Conventions
+
+<!-- Language versions, formatting, how types stay in sync, whatever a session
+     needs to match the surrounding code rather than guess. -->
+
+## The handoff protocol
+
+Any session that does real work ends by running `/checkout`: one line appended to
+`.agent/log/sessions.jsonl` and a rewrite of `.agent/projects/<slug>.md` (status
+/ what changed / next step / blockers). The protocol is plain files, so any tool
+can participate by following the same instructions.
