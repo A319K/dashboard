@@ -2,6 +2,7 @@
 # Your real config and state live here locally and are never committed.
 commitments.yaml
 deadlines.yaml
+workouts.yaml
 tasks.jsonl
 pending_calendar.jsonl
 calendar.json

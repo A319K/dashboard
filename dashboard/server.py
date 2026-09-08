@@ -24,6 +24,7 @@ from urllib.parse import urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "bin"))
 import agentlib as A  # noqa: E402
+import workout as W  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 AGENT = A.AGENT
@@ -119,13 +120,41 @@ def write_runtime(data: dict) -> None:
     RUNTIME.write_text(json.dumps(data, indent=2))
 
 
-def run_cli(script: str, args: list[str]) -> tuple[bool, str]:
+_snap_lock = threading.Lock()
+_snap_at = 0.0
+SNAPSHOT_SECONDS = 120
+
+
+def snapshot() -> None:
+    """Commit the state layer to its private history, at most twice a minute.
+
+    Runs detached so a slow git never delays a response, and stays silent on
+    failure: a missing history is a worse day later, but a broken save button is
+    a worse day now. `bin/state log` is where you find out whether it is working.
+    """
+    global _snap_at
+    script = AGENT / "bin" / "state"
+    if not script.exists():
+        return
+    with _snap_lock:
+        if time.time() - _snap_at < SNAPSHOT_SECONDS:
+            return
+        _snap_at = time.time()
+    threading.Thread(
+        target=lambda: subprocess.run(
+            [str(script), "save"], capture_output=True, text=True, timeout=20),
+        daemon=True).start()
+
+
+def run_cli(script: str, args: list[str], stdin: str | None = None) -> tuple[bool, str]:
     """Route every write through the existing CLIs so validation stays in one place."""
     proc = subprocess.run(
         [sys.executable, str(AGENT / "bin" / script), *args],
-        capture_output=True, text=True,
+        capture_output=True, text=True, input=stdin,
     )
     out = (proc.stdout + proc.stderr).strip()
+    if proc.returncode == 0:
+        snapshot()
     return proc.returncode == 0, out
 
 
@@ -159,6 +188,7 @@ def build_state() -> dict:
             "dir": cm.get("dir", ""),
             "priority": cm.get("priority", "medium"),
             "flexible": bool(cm.get("flexible")),
+            "archived": bool(cm.get("archived")),
             "hours_min": cm.get("hours_min", 0),
             "hours_max": cm.get("hours_max", 0),
             "minutes_this_week": mins,
@@ -171,7 +201,8 @@ def build_state() -> dict:
             "last_next": (last or {}).get("next", ""),
         })
     order = {"high": 0, "medium": 1, "low": 2}
-    projects.sort(key=lambda p: (order.get(p["priority"], 3), -p["minutes_this_week"]))
+    projects.sort(key=lambda p: (p["archived"], order.get(p["priority"], 3),
+                                 -p["minutes_this_week"]))
 
     # ---- habits
     habits = []
@@ -182,6 +213,7 @@ def build_state() -> dict:
             "count": n,
             "target": h.get("target_per_week", 0),
             "stretch": h.get("stretch"),
+            "next_split": A.next_split(life) if h["id"] == "gym" else None,
         })
 
     # ---- deadlines
@@ -427,6 +459,28 @@ def free_name(name: str) -> Path:
     return path
 
 
+def queue_done(data: dict) -> str:
+    """Queue a finished session for the Claude Plan calendar.
+
+    This process is stdlib-only and cannot reach the Google Calendar MCP, so a
+    completed session becomes a pending row in pending_calendar.jsonl exactly
+    like a planned block does. A Claude session flushes the queue. Returns a
+    short suffix for the toast, or "" when there is nothing to say.
+    """
+    start, end = data.get("started_at"), data.get("ended_at")
+    if not (start and end):
+        return ""                      # a live-clock checkout has no span to record
+    pid = data.get("project", "")
+    name = A.project_meta().get(pid, {}).get("name", pid)
+    did = (data.get("did") or "").strip()
+    # Title says the work happened; a planned block's title says what to start.
+    summary = f"\u2713 {name}" + (f" \u2014 {did.splitlines()[0][:60]}" if did else "")
+    ok, out = run_cli("queue_event.py", [
+        "--summary", summary, "--start", start, "--end", end,
+        "--kind", "done", "--commitment", pid, "--notes", did])
+    return "\n" + (out if ok else f"(calendar queue failed: {out})")
+
+
 def set_project_next(pid: str, text: str) -> tuple[bool, str]:
     path = AGENT / "projects" / f"{pid}.md"
     if not path.exists():
@@ -437,6 +491,71 @@ def set_project_next(pid: str, text: str) -> tuple[bool, str]:
         return False, "no '**Next step:**' section found"
     path.write_text(pattern.sub(lambda m: f"{m.group(1)} {text.strip()}\n", body, count=1))
     return True, "updated"
+
+
+# ---------------------------------------------------------------- training
+
+def build_train() -> dict:
+    """State for the training view.
+
+    Kept off /api/state on purpose: the board never needs the full exercise
+    history, and this is only read when the view is actually open.
+    """
+    now = datetime.now(A.TZ)
+    wk_start, wk_end = A.week_bounds(now)
+    life = A.life()
+    tmpl = A.workouts()
+    last = W.last_numbers()
+
+    def decorate(ex: dict) -> dict:
+        """Hang last session's numbers on a template row, alternate included."""
+        out = {"id": ex["id"], "name": ex.get("name", ex["id"]),
+               "sets": ex.get("sets", 2), "unit": ex.get("unit") or "lb",
+               "last": last.get(ex["id"])}
+        if ex.get("or"):
+            out["or"] = decorate(ex["or"])
+        return out
+
+    splits = [{"id": sp["id"], "name": sp.get("name", sp["id"]),
+               "exercises": [decorate(e) for e in sp.get("exercises") or []]}
+              for sp in tmpl.get("splits", []) if sp.get("id")]
+
+    wk_life = [e for e in life
+               if (t := A.parse_ts(e.get("ts"))) and wk_start <= t < wk_end]
+    targets = {h["id"]: h for h in A.commitments().get("habits", [])}
+
+    recent = []
+    for e in [x for x in life if x.get("kind") in ("gym", "cardio")][-12:][::-1]:
+        t = A.parse_ts(e.get("ts"))
+        recent.append({
+            "ts": e.get("ts"),
+            "when": t.strftime("%a %m/%d") if t else "",
+            "kind": e.get("kind"),
+            "split": e.get("split"),
+            "activity": e.get("activity"),
+            "detail": e.get("detail", ""),
+            "minutes": e.get("minutes"),
+            "exercises": e.get("exercises") or [],
+            "volume": W.volume(e.get("exercises") or []),
+        })
+
+    return {
+        "now": now.isoformat(),
+        "rotation": tmpl.get("rotation") or [],
+        "splits": splits,
+        "cardio": tmpl.get("cardio") or [],
+        "next": A.next_split(life),
+        "week_splits": [e.get("split") for e in wk_life
+                        if e.get("kind") == "gym" and e.get("split")],
+        "active": read_runtime().get("workout"),
+        "recent": recent,
+        "week": {
+            k: {"count": len([e for e in wk_life if e.get("kind") == k]),
+                "target": (targets.get(k) or {}).get("target_per_week", 0),
+                "stretch": (targets.get(k) or {}).get("stretch")}
+            for k in ("gym", "cardio")
+        },
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -457,6 +576,11 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 return self._send(200, build_state())
             except Exception as exc:  # surface parse errors in the UI
+                return self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
+        if path == "/api/train":
+            try:
+                return self._send(200, build_train())
+            except Exception as exc:
                 return self._send(500, {"error": f"{type(exc).__name__}: {exc}"})
         if path in ("/", "/index.html"):
             html = (HERE / "index.html").read_bytes()
@@ -481,6 +605,8 @@ class Handler(BaseHTTPRequestHandler):
                     "--next", data.get("next", "").strip()]
             for flag, key in (("--actual-minutes", "actual_minutes"),
                               ("--planned-minutes", "planned_minutes"),
+                              ("--started-at", "started_at"),
+                              ("--ended-at", "ended_at"),
                               ("--focus", "focus")):
                 if data.get(key) not in (None, ""):
                     args += [flag, str(data[key])]
@@ -495,6 +621,7 @@ class Handler(BaseHTTPRequestHandler):
                 rt = read_runtime()
                 rt.pop("active", None)
                 write_runtime(rt)
+                out += queue_done(data)
             return self._send(200 if ok else 400, {"ok": ok, "message": out})
 
         if path == "/api/life":
@@ -506,6 +633,26 @@ class Handler(BaseHTTPRequestHandler):
             if data.get("with"):
                 args += ["--with", data["with"]]
             ok, out = run_cli("log_life.py", args)
+            return self._send(200 if ok else 400, {"ok": ok, "message": out})
+
+        if path == "/api/project":
+            op = data.get("op")
+            if op == "add":
+                args = ["add", (data.get("id") or "").strip(),
+                        "--name", data.get("name", ""),
+                        "--lane", data.get("lane", ""),
+                        "--hours-min", str(data.get("hours_min", 0)),
+                        "--hours-max", str(data.get("hours_max", 2)),
+                        "--priority", data.get("priority", "medium")]
+                if data.get("dir"):
+                    args += ["--dir", data["dir"]]
+                if data.get("flexible"):
+                    args += ["--flexible"]
+            elif op in ("archive", "restore"):
+                args = [op, (data.get("id") or "").strip()]
+            else:
+                return self._send(400, {"ok": False, "message": f"unknown op {op!r}"})
+            ok, out = run_cli("project.py", args)
             return self._send(200 if ok else 400, {"ok": ok, "message": out})
 
         if path == "/api/next":
@@ -609,6 +756,84 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(400, {"ok": False, "message": "no such file in the inbox"})
             target.unlink()
             return self._send(200, {"ok": True, "message": f"removed {target.name}"})
+
+        if path == "/api/workout":
+            op = data.get("op")
+            rt = read_runtime()
+            act = rt.get("workout")
+
+            if op == "start":
+                split = data.get("split")
+                if split not in A.split_meta():
+                    return self._send(400, {"ok": False, "message": f"no split called {split!r}"})
+                act = {"split": split,
+                       "started": datetime.now(A.TZ).isoformat(timespec="seconds"),
+                       "exercises": {}, "swaps": {}}
+                write_runtime({**rt, "workout": act})
+                return self._send(200, {"ok": True, "active": act})
+
+            if op == "discard":
+                rt.pop("workout", None)
+                write_runtime(rt)
+                return self._send(200, {"ok": True, "message": "workout discarded"})
+
+            if not act:
+                return self._send(400, {"ok": False, "message": "no workout in progress"})
+
+            if op == "sets":
+                # The page sends the whole exercise every edit rather than a
+                # delta, so a dropped request can never leave a half-written set.
+                eid = data.get("exercise")
+                if eid not in A.exercise_names():
+                    return self._send(400, {"ok": False, "message": f"unknown exercise {eid!r}"})
+                rows = []
+                for st in data.get("sets") or []:
+                    reps = st.get("reps")
+                    w = st.get("weight")
+                    rows.append({"weight": None if w in (None, "") else float(w),
+                                 "reps": None if reps in (None, "") else int(reps)})
+                act["exercises"][eid] = {"unit": data.get("unit") or "lb", "sets": rows}
+                write_runtime({**rt, "workout": act})
+                return self._send(200, {"ok": True})
+
+            if op == "swap":
+                act.setdefault("swaps", {})[data.get("slot")] = data.get("exercise")
+                write_runtime({**rt, "workout": act})
+                return self._send(200, {"ok": True, "active": act})
+
+            if op == "finish":
+                started = A.parse_ts(act.get("started"))
+                minutes = data.get("minutes")
+                if minutes in (None, ""):
+                    minutes = round((datetime.now(A.TZ) - started).total_seconds() / 60) \
+                        if started else None
+                # The page sends its own copy so a debounced save still in flight
+                # can't be dropped between the last keystroke and Finish.
+                src = data.get("exercises") or act.get("exercises", {})
+                payload = {
+                    "exercises": [{"id": eid, "unit": ex.get("unit"),
+                                   "sets": [st for st in ex.get("sets") or [] if st.get("reps")]}
+                                  for eid, ex in src.items()],
+                    "minutes": int(minutes) if minutes else None,
+                    "note": data.get("note", ""),
+                }
+                ok, out = run_cli("workout.py", ["log", act["split"], "--stdin-json"],
+                                  stdin=json.dumps(payload))
+                if ok:                       # only clear once it is safely on disk
+                    rt.pop("workout", None)
+                    write_runtime(rt)
+                return self._send(200 if ok else 400, {"ok": ok, "message": out})
+
+            return self._send(400, {"ok": False, "message": f"unknown op {op!r}"})
+
+        if path == "/api/cardio":
+            args = ["cardio", data.get("activity", "")]
+            if data.get("minutes"):
+                args += ["--minutes", str(int(data["minutes"]))]
+            if data.get("note"):
+                args += ["--note", data["note"]]
+            ok, out = run_cli("workout.py", args)
+            return self._send(200 if ok else 400, {"ok": ok, "message": out})
 
         if path == "/api/start":
             write_runtime({**read_runtime(), "active": {

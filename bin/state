@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Private history for the state layer.
+#
+# This directory is already a git repo — the public one, whose .gitignore
+# deliberately excludes every personal file. This is the other half: a separate
+# git dir, kept OUTSIDE the synced folder so a sync mishap can't take the history
+# with it, tracking exactly what the public repo omits. Two repos, one work tree,
+# no overlap. Never give this one a remote.
+#
+# Set it up once:
+#   git init --bare ~/.agent-state.git -b main
+#   git --git-dir=~/.agent-state.git config core.worktree ~/Documents/.agent
+#   git --git-dir=~/.agent-state.git config core.bare false
+#   state add -f STATE.md PROFILE.md projects/*.md log/*.jsonl ...
+# New state files need `add -f` once: the work-tree .gitignore outranks
+# info/exclude, but ignore rules stop mattering once a file is tracked.
+#
+#   state save [msg]   commit whatever changed
+#   state log          recent snapshots
+#   state diff         what's changed since the last snapshot
+#   state restore <path> [ref]   put one file back (default: last snapshot)
+#   state <anything>   passed straight to git
+set -euo pipefail
+export GIT_DIR="$HOME/.agent-state.git"
+export GIT_WORK_TREE="$HOME/Documents/.agent"
+
+case "${1:-log}" in
+  save)
+    shift
+    git add -u                       # tracked files only: new state files are
+                                     # force-added deliberately, never by accident
+    if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
+    git commit -q -m "${*:-state snapshot $(date '+%Y-%m-%d %H:%M')}"
+    echo "saved: $(git diff --name-only HEAD~1 HEAD 2>/dev/null | tr '\n' ' ')"
+    ;;
+  log)  shift; git --no-pager log --oneline --decorate -"${1:-15}" ;;
+  diff) shift; git --no-pager diff "$@" ;;
+  restore)
+    path="${2:?which file?}"; ref="${3:-HEAD}"
+    git checkout "$ref" -- "$path"
+    echo "restored $path from $ref"
+    ;;
+  *) git "$@" ;;
+esac

@@ -20,7 +20,10 @@ AGENT = Path(__file__).resolve().parent.parent
 QUEUE = AGENT / "pending_calendar.jsonl"
 TZ = ZoneInfo("America/New_York")
 
-KINDS = ["block", "deadline", "meal", "social", "other"]
+# "block" is intended work (future); "done" is work that already happened and is
+# being written to the calendar as a record. They flush to the same calendar but
+# read differently, so the title carries the distinction — see cmd_add.
+KINDS = ["block", "done", "deadline", "meal", "social", "other"]
 
 
 def load() -> list[dict]:
@@ -67,10 +70,26 @@ def cmd_add(args: argparse.Namespace) -> int:
     if start.tzinfo is None:
         start = start.replace(tzinfo=TZ)
 
+    # A completed session is evidence, not a plan: it has no cold start to carry,
+    # so --first-action is not required for it.
     if args.kind == "block" and not args.first_action:
         print("error: a work block requires --first-action. A block that says "
               "only 'work on X' is a defect — the cold start is the bottleneck.")
         return 1
+
+    # --end wins over --minutes: a logged session knows exactly when it stopped,
+    # where a planned block only knows how long it is meant to run.
+    if args.end:
+        end = datetime.fromisoformat(args.end)
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=TZ)
+        if end <= start:
+            print("error: --end must be after --start")
+            return 1
+        minutes = round((end - start).total_seconds() / 60)
+    else:
+        minutes = args.minutes
+        end = start + timedelta(minutes=minutes)
 
     record = {
         "id": uuid.uuid4().hex,
@@ -79,8 +98,8 @@ def cmd_add(args: argparse.Namespace) -> int:
         "kind": args.kind,
         "summary": args.summary,
         "start": start.isoformat(timespec="seconds"),
-        "end": (start + timedelta(minutes=args.minutes)).isoformat(timespec="seconds"),
-        "minutes": args.minutes,
+        "end": end.isoformat(timespec="seconds"),
+        "minutes": minutes,
         "commitment": args.commitment,
         "first_action": args.first_action,
         "notes": args.notes,
@@ -90,7 +109,7 @@ def cmd_add(args: argparse.Namespace) -> int:
     QUEUE.parent.mkdir(parents=True, exist_ok=True)
     with QUEUE.open("a") as fh:
         fh.write(json.dumps(record) + "\n")
-    print(f"queued: {start:%a %m/%d %H:%M} · {args.minutes}m · {args.summary}")
+    print(f"queued: {start:%a %m/%d %H:%M}-{end:%H:%M} · {minutes}m · {args.summary}")
     return 0
 
 
@@ -104,6 +123,7 @@ def main() -> int:
     p.add_argument("--summary")
     p.add_argument("--start", help="ISO datetime.")
     p.add_argument("--minutes", type=int, default=50)
+    p.add_argument("--end", help="ISO datetime. Overrides --minutes; use for logged work.")
     p.add_argument("--kind", choices=KINDS, default="block")
     p.add_argument("--commitment", default=None, help="Project id from commitments.yaml.")
     p.add_argument("--first-action", default=None,

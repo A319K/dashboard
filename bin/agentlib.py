@@ -185,8 +185,55 @@ def life() -> list[dict]:
     return read_jsonl(AGENT / "log" / "life.jsonl")
 
 
-def queued_blocks() -> list[dict]:
-    return read_jsonl(AGENT / "pending_calendar.jsonl")
+def workouts() -> dict:
+    """The training templates: rotation order, splits, cardio activities."""
+    return load_yaml(AGENT / "workouts.yaml") or {}
+
+
+def split_meta() -> dict[str, dict]:
+    """Split id -> its workouts.yaml entry, in file order."""
+    return {s["id"]: s for s in workouts().get("splits", []) if s.get("id")}
+
+
+def exercise_names() -> dict[str, str]:
+    """Exercise id -> display name, including the alternates behind `or`."""
+    out: dict[str, str] = {}
+    for sp in workouts().get("splits", []):
+        for ex in sp.get("exercises", []) or []:
+            for side in (ex, ex.get("or")):
+                if side and side.get("id"):
+                    out[side["id"]] = side.get("name", side["id"])
+    return out
+
+
+def next_split(history: list[dict] | None = None) -> str | None:
+    """The split after the one most recently logged.
+
+    Derived rather than stored, so a skipped day shifts the rotation
+    forward instead of leaving you permanently behind it.
+    """
+    order = workouts().get("rotation") or []
+    if not order:
+        return None
+    for e in reversed(history if history is not None else life()):
+        last = e.get("split")
+        if last in order:
+            return order[(order.index(last) + 1) % len(order)]
+    return order[0]
+
+
+def queued_blocks(include_done: bool = False) -> list[dict]:
+    """Pending calendar rows. Plans only, unless include_done.
+
+    Completed sessions ("done") share the queue because they flush to the same
+    calendar, but they are not plans: the dashboard already draws them from
+    sessions.jsonl, and counting them as blocks would double-draw the week and
+    eat into max_blocks_per_day.
+    """
+    rows = read_jsonl(AGENT / "pending_calendar.jsonl")
+    if include_done:
+        return rows
+    return [r for r in rows if r.get("kind") != "done"]
 
 
 def week_bounds(now: datetime | None = None) -> tuple[datetime, datetime]:
@@ -229,7 +276,10 @@ def project_state(pid: str) -> dict:
                 meta[k.strip()] = _scalar(v)
 
     sections: dict[str, str] = {}
-    for m in re.finditer(r"\*\*(.+?):\*\*\s*(.*?)(?=\n\*\*|\n##|\Z)", body, re.S):
+    # [ \t]* not \s*: an empty section must not run past the blank line and
+    # swallow the next one. **Next step:** with nothing after it is empty, and
+    # the **Blockers:** below it is its own section.
+    for m in re.finditer(r"\*\*(.+?):\*\*[ \t]*(.*?)(?=\n\*\*|\n##|\Z)", body, re.S):
         sections[m.group(1).strip().lower()] = m.group(2).strip()
 
     return {"meta": meta, "sections": sections, "path": str(path)}

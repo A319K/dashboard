@@ -75,18 +75,24 @@ svg{shape-rendering:crispEdges}
 .clock{font:400 45px/1 var(--display);font-variant-numeric:tabular-nums}
 .nowtop{display:flex;justify-content:space-between;align-items:flex-start;gap:26px;flex-wrap:wrap}
 .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+/* ten projects need to breathe more than four did */
+.acts.wrap{gap:8px}
+.acts.wrap button{font-size:13.5px;padding:11px 14px}
+.acts.wrap button s{display:block;text-decoration:none;font:700 9.5px/1 var(--label);
+  letter-spacing:.1em;text-transform:uppercase;color:var(--mid);margin-top:4px}
 
 /* ── buttons: physical, they press into their shadow ── */
-button{font:400 12px/1 var(--label);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;
+button,a.btn{font:400 12px/1 var(--label);letter-spacing:.05em;text-transform:uppercase;cursor:pointer;
   padding:12px 15px 10px;color:var(--ink);background:var(--panel);
   border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
-button:hover{background:var(--sunk)}
-button:active{transform:translate(3px,3px);box-shadow:none}
+a.btn{display:inline-block;text-decoration:none}
+button:hover,a.btn:hover{background:var(--sunk)}
+button:active,a.btn:active{transform:translate(3px,3px);box-shadow:none}
 button.go{background:var(--rec);color:var(--panel);display:inline-flex;align-items:center;gap:9px}
 button.go:hover{background:#8E2D11}
 button.go .dot{width:9px;height:9px;background:var(--panel)}
-button.sm{padding:9px 11px 7px;font-size:11px;box-shadow:2px 2px 0 var(--ink)}
-button.sm:active{transform:translate(2px,2px)}
+button.sm,a.btn.sm{padding:9px 11px 7px;font-size:11px;box-shadow:2px 2px 0 var(--ink)}
+button.sm:active,a.btn.sm:active{transform:translate(2px,2px)}
 button.quiet{background:transparent;border-color:transparent;box-shadow:none;color:var(--mid);
   text-decoration:underline;text-underline-offset:3px}
 button.quiet:hover{background:transparent;color:var(--ink)}
@@ -98,6 +104,7 @@ h3.sec b{background:var(--ink);color:var(--panel);font:700 11px/1 var(--label);
   letter-spacing:.14em;text-transform:uppercase;padding:8px 11px 6px;font-weight:400}
 h3.sec::after{content:"";flex:1;height:3px;
   background:repeating-linear-gradient(90deg,var(--ink) 0 4px,transparent 4px 8px)}
+h3.sec button{flex:none}
 
 /* ── SIGNATURE: the week as a dot-matrix readout ────── */
 .trace{padding:16px 18px 14px;overflow-x:auto}
@@ -154,6 +161,25 @@ h3.sec::after{content:"";flex:1;height:3px;
 .next:empty::before{content:"Write the first action for next time";color:var(--mid)}
 .flag{margin-top:13px;padding:9px 11px;background:var(--sunk);border-left:6px solid var(--warn);
   font:500 12.5px/1.45 var(--data);display:flex;gap:9px;align-items:flex-start}
+/* more than one blocker: the count is the control that reveals the rest */
+.flag.more{cursor:pointer}
+.flag.more:hover{background:#D3C0AC}
+.flag .rest{display:none}
+.flag.more.open .rest{display:block}
+.flag .rest b{display:block;font-weight:500;margin-top:7px;padding-top:7px;
+  border-top:3px solid rgba(107,90,72,.22)}
+.flag .cnt{display:inline-block;margin-top:5px;color:var(--ink);opacity:.75;
+  text-decoration:underline;text-underline-offset:3px}
+.flag.more.open .cnt.shut,.flag .cnt.less{display:none}
+.flag.more.open .cnt.less{display:inline-block}
+
+/* ── archived projects ──────────────────────────────── */
+.arch{display:grid;gap:8px;margin-top:12px}
+.arow{display:flex;align-items:center;gap:12px;padding:10px 13px;background:var(--sunk);
+  border:3px solid var(--mid);font-size:14px}
+.arow i{width:9px;height:9px;background:var(--c);border:2px solid var(--ink);flex:none}
+.arow .rt{margin-left:auto;font:500 11.5px/1 var(--data);color:var(--mid)}
+.secbtn{margin-left:auto;padding:7px 10px 5px;font-size:10.5px;box-shadow:2px 2px 0 var(--ink)}
 
 /* ── today ──────────────────────────────────────────── */
 .item{display:flex;gap:15px;align-items:center;padding:13px 16px;margin-bottom:10px;
@@ -301,6 +327,89 @@ code{font:500 .9em var(--data);background:var(--sunk);padding:2px 5px;color:var(
   .pdays{grid-template-columns:repeat(2,1fr)}
 }
 
+/* ── training ───────────────────────────────────────── */
+/* the rotation, as a row of cartridges: spent, loaded, waiting */
+.rot{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.rot s{text-decoration:none;padding:10px 13px 8px;background:var(--panel);
+  border:3px solid var(--ink);font:700 11px/1 var(--label);letter-spacing:.11em;
+  text-transform:uppercase;color:var(--mid);box-shadow:3px 3px 0 var(--sunk);cursor:pointer}
+.rot s:hover{background:var(--sunk)}
+.rot s.up{background:var(--ink);color:var(--panel);box-shadow:3px 3px 0 var(--rec)}
+.rot s.done{background:var(--sunk);box-shadow:none;border-color:var(--mid);
+  color:var(--mid);text-decoration:line-through}
+.rot s b{font-weight:400;margin-left:7px;opacity:.6}
+
+.wnow{padding:24px 26px 22px;margin-bottom:22px}
+.wnow h2{font:400 clamp(26px,3.6vw,36px)/1.1 var(--display);margin:14px 0 0}
+.wtop{display:flex;justify-content:space-between;align-items:flex-start;gap:22px;flex-wrap:wrap}
+.wclock{font:400 40px/1 var(--display);font-variant-numeric:tabular-nums;text-align:right}
+.wsum{font:500 12px/1 var(--data);color:var(--mid);margin-top:9px;text-align:right}
+
+/* ── SIGNATURE: the ledger. Last session on the left, immutable and grey;
+      today's blanks on the right. The comparison is the whole point, so the
+      two are never more than a rule apart. ── */
+.wsheet{max-width:780px}
+.ledger{display:grid;gap:10px}
+.lrow{background:var(--panel);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--ink);
+  padding:11px 15px 13px}
+.lrow.logged{box-shadow:4px 4px 0 var(--ok)}
+.lhead{display:flex;align-items:baseline;gap:11px;margin-bottom:9px}
+.lhead h4{margin:0;font:400 19px/1.2 var(--display)}
+.lhead .swap{margin-left:auto;flex:none}
+.lbody{display:grid;grid-template-columns:172px 1fr;gap:15px;align-items:center}
+.last{font:500 12.5px/1.6 var(--data);color:var(--mid);
+  border-right:3px solid var(--sunk);padding-right:13px}
+.last em{font-style:normal;font:700 10px/1 var(--label);letter-spacing:.13em;
+  text-transform:uppercase;display:block;margin-bottom:6px;opacity:.65}
+.last b{font-weight:500;color:var(--ink);letter-spacing:.03em}
+.last .ago{display:block;margin-top:4px;font-size:11px;opacity:.75}
+.last.none{color:var(--sage);border-right-color:var(--sage-lt)}
+
+.sets{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.sb{display:flex;align-items:center;gap:3px;background:var(--sunk);
+  border:3px solid var(--ink);padding:6px 8px}
+.sb input{width:44px;padding:4px 2px;text-align:center;border:0;background:transparent;
+  font:500 16px/1 var(--data);color:var(--ink)}
+.sb input::placeholder{color:var(--mid);opacity:.38;font-weight:400}
+.sb input:focus{outline:none;background:transparent;box-shadow:none}
+.sb x{font:500 12px/1 var(--data);color:var(--mid);text-decoration:none}
+.sb.filled{background:var(--panel);box-shadow:2px 2px 0 var(--ink)}
+/* a set that beat the last one gets the only accent on the row */
+.sb.pr{border-color:var(--rec);box-shadow:2px 2px 0 var(--rec)}
+.sb.pr::after{content:"\25B2";color:var(--rec);font-size:9px;margin-left:3px}
+button.addset{padding:9px 11px 7px;font-size:11px;box-shadow:2px 2px 0 var(--ink);
+  background:transparent;border-style:dashed}
+
+.pickgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.pick{padding:15px 14px 13px;text-align:left;background:var(--panel);
+  border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer;
+  font:400 12px/1 var(--label);letter-spacing:.06em;text-transform:uppercase}
+.pick:hover{background:var(--sunk)}
+.pick b{display:block;font:400 21px/1.1 var(--display);letter-spacing:0;
+  text-transform:none;margin-bottom:6px}
+.pick s{text-decoration:none;color:var(--mid);font:500 11px/1.4 var(--data);
+  letter-spacing:.02em;text-transform:none;display:block;margin-top:6px}
+
+.hist{display:grid;gap:9px}
+.hrow{background:var(--panel);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+.hrow>summary,.hrow>.hsum{padding:11px 14px;display:flex;align-items:center;gap:12px;
+  list-style:none;font-size:14.5px}
+.hrow>summary{cursor:pointer}
+.hrow>summary:hover{background:var(--sunk)}
+.hrow>summary::-webkit-details-marker{display:none}
+.hrow>summary i,.hrow>.hsum i{width:9px;height:9px;background:var(--c);border:2px solid var(--ink);flex:none}
+.hrow>summary .rt,.hrow>.hsum .rt{margin-left:auto;font:500 11.5px/1 var(--data);color:var(--mid);
+  white-space:nowrap}
+.hdet{border-top:3px solid var(--sunk);padding:11px 14px 13px;display:grid;gap:6px}
+.hdet div{display:flex;gap:12px;font:500 12.5px/1.5 var(--data);color:var(--mid)}
+.hdet div span{flex:1;color:var(--ink);font-weight:500}
+@media (max-width:660px){
+  .lbody{grid-template-columns:1fr;gap:11px}
+  .last{border-right:0;border-bottom:3px solid var(--sunk);padding:0 0 10px}
+  .wclock{text-align:left}
+  .wsum{text-align:left}
+}
+
 /* ── modal ──────────────────────────────────────────── */
 .scrim{position:fixed;inset:0;background:rgba(36,28,18,.55);display:flex;align-items:flex-start;
   justify-content:center;padding:22px;z-index:60;overflow:auto;
@@ -319,11 +428,13 @@ input,textarea,select{width:100%;font:400 15px/1.5 var(--body);padding:11px 13px
 input:focus,textarea:focus,select:focus{outline:none;background:var(--panel);
   box-shadow:inset 0 0 0 3px var(--sunk)}
 textarea{resize:vertical;min-height:70px}
-.scale{display:flex;gap:7px}
-.scale button{flex:1;padding:15px 0 13px;font:400 17px/1 var(--display)}
-.scale button[aria-pressed=true]{background:var(--ink);color:var(--panel)}
-.ends{display:flex;justify-content:space-between;font:700 10.5px/1 var(--label);
-  color:var(--mid);letter-spacing:.1em;text-transform:uppercase;margin-top:9px}
+/* the from/to pair, with the running duration sitting on the baseline beside it */
+.span{display:flex;gap:11px;align-items:flex-end}
+.span > div:not(.dur){flex:1}
+.span label{margin-top:14px}
+.dur{flex:0 0 auto;font:700 11px/1 var(--label);letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mid);padding-bottom:15px;min-width:52px}
+.dur.bad{color:var(--rec)}
 .hint{font-size:13.5px;color:var(--mid);margin:9px 0 0;line-height:1.5}
 
 .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);
@@ -377,8 +488,10 @@ function kindsPresent(){
   const known = Object.keys(KIND).filter(k=>found.includes(k));
   return known.concat(found.filter(k=>!KIND[k]));
 }
-let S=null, tick=null, focusVal=null, drawerOpen=false, dragTask=null;
-const view = () => location.hash === '#plan' ? 'plan' : 'board';
+let S=null, tick=null, drawerOpen=false, dragTask=null;
+let T=null, wtick=null, saveTimer={}, showArch=false;
+const view = () => location.hash === '#plan' ? 'plan'
+                 : location.hash === '#train' ? 'train' : 'board';
 
 const hhmm = i => new Date(i).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',hour12:false});
 const dur  = m => m>=60 ? (m/60).toFixed(1)+"h" : m+"m";
@@ -419,6 +532,8 @@ function cells(iso, minutes){
 
 /* ───────────────────────── render ───────────────────────── */
 function render(){
+  clearInterval(wtick);                     // the workout clock only ticks in its own view
+  if(view()==='train'){ loadTrain(); return; }
   if(view()==='plan'){ renderPlan(); return; }
   const today = S.blocks.filter(b=>b.dow===S.today_dow);
   const live  = !!S.active;
@@ -439,7 +554,10 @@ function render(){
     <h3 class="sec"><b>Inbox</b></h3>${inbox()}
   </div>
   <div class="stag" style="animation-delay:.2s">
-    <h3 class="sec"><b>Projects</b></h3><div class="grid g2">${S.projects.map(project).join("")}</div>
+    <h3 class="sec"><b>Projects</b>
+      <button class="secbtn" onclick="openAddProject()">+ Add project</button></h3>
+    <div class="grid g2">${onBoard().map(project).join("")}</div>
+    ${archivedPanel()}
   </div>
   <div class="stag" style="animation-delay:.24s">
     <h3 class="sec"><b>Streaks</b></h3><div class="grid g3">${S.habits.map(habit).join("")}${meals()}</div>
@@ -498,21 +616,27 @@ function nowPanel(today, live){
       <div class="acts"><button class="go" onclick='go(${JSON.stringify(nx)})'>
         <span class="dot"></span>Start the clock</button></div></section>`;
   }
-  const picks = S.projects.filter(p=>p.next).slice(0,4);
+  /* Every live project, not the top few: the picker is also how you reach a
+     project that has gone quiet, and a lane you never see is a lane you never
+     work. Ones with no next step still show — they just say so. */
+  const picks = onBoard();
   return `<section class="window now" style="--c:var(--research)">
     <div class="eyebrow" style="color:var(--mid)">Nothing scheduled</div>
     <h2>Pick a project and start the clock.</h2>
-    <div class="acts">${picks.map(p=>`<button onclick='go(${JSON.stringify(
-      {commitment:p.id,summary:p.name,first_action:p.next,id:null})})'
-      style="border-left:10px solid ${hue(p.id)}">${esc(p.name)}</button>`).join("")}</div>
-    <p class="hint">Unplanned work counts double — it tells the planner when you actually focus.</p>
+    <div class="acts wrap">${picks.map(p=>`<button onclick='go(${JSON.stringify(
+      {commitment:p.id,summary:p.name,first_action:p.next||"",id:null})})'
+      style="border-left:10px solid ${hue(p.id)}" title="${esc(p.next||'No next step yet')}">
+      ${esc(p.name)}${p.next?'':'<s>no next step</s>'}</button>`).join("")}</div>
+    <p class="hint">Unplanned work counts double — it tells the planner when you actually work.</p>
   </section>`;
 }
 
 /* ── the signature: one cell per hour, seven days across ── */
 function trace(){
-  const rows = S.projects.filter(p =>
-    p.hours_max>0 || p.minutes_this_week>0 || S.blocks.some(b=>b.commitment===p.id));
+  /* an archived project still earns its row in the week it was worked in —
+     hiding logged hours would make the week's record wrong, not tidier */
+  const rows = S.projects.filter(p => p.minutes_this_week>0 ||
+    (!p.archived && (p.hours_max>0 || S.blocks.some(b=>b.commitment===p.id))));
   const n = new Date(S.now);
   const frac = (((n.getDay()+6)%7) +
     (Math.min(DAY1,Math.max(DAY0,n.getHours()+n.getMinutes()/60))-DAY0)/SLOT) / 7;
@@ -663,7 +787,9 @@ function habit(h){
     <div class="mnum"><span${met?' style="color:var(--sage)"':''}>${met?'target met':`${h.target-h.count} to go`}</span>
       <span>${n} = stretch</span></div>
     <div class="acts" style="margin-top:14px">
-      <button class="sm" onclick="quick('${h.id}')">Log ${h.id}</button></div></div>`;
+      <a class="btn sm" href="#train" title="\u2318-click to open in its own tab">${h.id==='gym'
+        ? (h.next_split ? `Train \u00b7 ${h.next_split}` : 'Train')
+        : 'Log cardio'}</a></div></div>`;
 }
 
 function meals(){
@@ -702,12 +828,17 @@ function project(p){
     <div class="next" contenteditable="true" data-p="${p.id}" onblur="saveNext(this)"
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();this.blur()}"
       >${md(p.next)}</div>
-    ${p.blockers.length?`<div class="flag"><span>!</span><span>${md(p.blockers[0])}${
-      p.blockers.length>1?` <span style="opacity:.7">+${p.blockers.length-1} more</span>`:''}</span></div>`:""}
+    ${p.blockers.length?`<div class="flag${p.blockers.length>1?' more':''}"${
+      p.blockers.length>1?` onclick="this.classList.toggle('open')"`:''}>
+      <span>!</span><span>${md(p.blockers[0])}${p.blockers.length>1?`
+        <span class="rest">${p.blockers.slice(1).map(b=>`<b>${md(b)}</b>`).join("")}</span>
+        <span class="cnt shut">+${p.blockers.length-1} more</span>
+        <span class="cnt less">show less</span>`:''}</span></div>`:""}
     <div class="acts" style="margin-top:16px">
       <button class="sm" onclick='go(${JSON.stringify(
         {commitment:p.id,summary:p.name,first_action:p.next,id:null})})'>Start</button>
-      <button class="sm quiet" onclick="openCheckout('${p.id}')">Log past work</button></div></div>`;
+      <button class="sm quiet" onclick="openCheckout('${p.id}')">Log past work</button>
+      <button class="sm quiet" onclick="archiveProject(this,'${p.id}')">Archive</button></div></div>`;
 }
 
 function logRow(r){
@@ -791,7 +922,7 @@ function addForm(){
       onkeydown="if(event.key==='Enter')addTask()">
     <input id="t-fa" placeholder="First action — the opener a block will carry">
     <div class="two">
-      <select id="t-proj">${S.projects.map(p=>
+      <select id="t-proj">${onBoard().map(p=>
         `<option value="${p.id}">${esc(p.name)}</option>`).join("")}</select>
       <input id="t-est" placeholder="Estimate — 90m, 2h">
     </div>
@@ -952,6 +1083,399 @@ function wirePlanDrop(){
   });
 }
 
+/* ── projects: add, archive, restore ─────────────────────
+   Archiving is not deleting. The commitment keeps its entry in
+   commitments.yaml with one flag added, its projects/<id>.md stays put, and
+   every session already logged against it still resolves to a name and a
+   colour. It only stops competing for the week.
+   ═══════════════════════════════════════════════════════ */
+const onBoard = () => S.projects.filter(p=>!p.archived);
+
+function archivedPanel(){
+  const gone = S.projects.filter(p=>p.archived);
+  if(!gone.length) return "";
+  return `<button class="donehdr" onclick="showArch=!showArch;render()">
+      ${showArch?'▾':'▸'} Archived <s>${gone.length}</s></button>
+    ${showArch?`<div class="arch">${gone.map(p=>`
+      <div class="arow" style="--c:${hue(p.id)}"><i></i>
+        <span>${esc(p.name)}</span>
+        <span class="rt">${p.sessions_this_week?`${(p.minutes_this_week/60).toFixed(1)}h this week · `:''}${
+          esc(p.lane)}</span>
+        <button class="sm quiet" onclick="restoreProject('${p.id}')">Restore</button>
+      </div>`).join("")}</div>`:''}`;
+}
+
+/* archiving is reversible, so one confirming click is enough — the same
+   two-step the task delete uses, without the undo toast */
+function archiveProject(btn, id){
+  if(btn.dataset.armed !== '1'){
+    document.querySelectorAll('[data-armed="1"]').forEach(b=>{
+      b.dataset.armed=''; b.textContent='Archive';
+    });
+    btn.dataset.armed = '1'; btn.textContent = 'Archive — sure?';
+    setTimeout(()=>{ if(btn.dataset.armed==='1'){ btn.dataset.armed=''; btn.textContent='Archive'; } }, 4000);
+    return;
+  }
+  api('/api/project',{op:'archive', id}).then(r=>{
+    toast(r.ok ? r.message : "Didn’t archive: "+r.message, !r.ok);
+    if(r.ok){ showArch = true; load(); }
+  });
+}
+function restoreProject(id){
+  api('/api/project',{op:'restore', id}).then(r=>{
+    toast(r.ok ? r.message : "Didn’t restore: "+r.message, !r.ok);
+    if(r.ok) load();
+  });
+}
+
+function openAddProject(){
+  if($('.scrim')) return;              // one modal at a time, however fast you click
+  const sc = document.createElement('div');
+  sc.className = 'scrim';
+  sc.onclick = e => { if(e.target===sc) sc.remove(); };
+  sc.innerHTML = `<div class="window modal">
+    <h2>Add a project</h2>
+    <p class="hint">This appends a commitment to <code>commitments.yaml</code> and
+      seeds <code>projects/&lt;id&gt;.md</code>. The budget is what the planner
+      spends on it in a week — leave it at 0–2 if you don’t know yet.</p>
+    <label>Name</label>
+    <input id="np-name" placeholder="EE 301" autocomplete="off">
+    <label>Id <em>— what every log entry keys off; can’t change later</em></label>
+    <input id="np-id" placeholder="ee301" autocomplete="off">
+    <label>Lane <em>— picks its colour</em></label>
+    <select id="np-lane">${Object.keys(LANE).map(l=>
+      `<option value="${l}">${l}</option>`).join("")}</select>
+    <label>Folder <em>— optional, relative to ~/Documents</em></label>
+    <input id="np-dir" placeholder="fall_2026/ee301" autocomplete="off">
+    <div class="tadd" style="margin-top:20px">
+      <div class="two">
+        <div><label style="margin-top:0">Hours min</label>
+          <input id="np-min" type="number" min="0" step="0.5" value="0"></div>
+        <div><label style="margin-top:0">Hours max</label>
+          <input id="np-max" type="number" min="0" step="0.5" value="2"></div>
+      </div>
+      <div class="two">
+        <div><label style="margin-top:0">Priority</label>
+          <select id="np-pri"><option>high</option><option selected>medium</option>
+            <option>low</option></select></div>
+        <div><label style="margin-top:0">Flexible</label>
+          <select id="np-flex"><option value="">holds its budget</option>
+            <option value="1">first to yield</option></select></div>
+      </div>
+    </div>
+    <div class="acts">
+      <button class="go" id="np-go"><span class="dot"></span>Add project</button>
+      <button class="sm quiet" id="np-no">Cancel</button>
+    </div></div>`;
+  document.body.appendChild(sc);
+
+  const name = $('#np-name', sc), id = $('#np-id', sc);
+  /* the id is derived while you type the name, until you touch it yourself */
+  name.oninput = () => { if(!id.dataset.touched) id.value = slug(name.value); };
+  id.oninput = () => { id.dataset.touched = '1'; };
+  $('#np-no', sc).onclick = () => sc.remove();
+  $('#np-go', sc).onclick = async () => {
+    const body = {
+      op:'add', id: id.value.trim(), name: name.value.trim(),
+      lane: $('#np-lane',sc).value, dir: $('#np-dir',sc).value.trim(),
+      hours_min: $('#np-min',sc).value || 0, hours_max: $('#np-max',sc).value || 0,
+      priority: $('#np-pri',sc).value, flexible: !!$('#np-flex',sc).value,
+    };
+    if(!body.id){ toast("Give it an id first.", true); return; }
+    const r = await api('/api/project', body);
+    toast(r.ok ? r.message : r.message, !r.ok);
+    if(r.ok){ sc.remove(); load(); }
+  };
+  name.focus();
+}
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,'').replace(/^-+|-+$/g,'');
+
+/* ═══════════════════════ training ═══════════════════════
+   One comparison carries this view: what you lifted last time on this
+   exercise, printed beside today's blanks. Beat it and the box marks itself.
+   Everything else — rotation, history, cardio — stays quiet around that.
+   ═══════════════════════════════════════════════════════ */
+const splitById = id => (T.splits||[]).find(s=>s.id===id);
+const fmtSet = (s,bw) => bw||!s.weight ? `×${s.reps}` : `${+s.weight}×${s.reps}`;
+const lbs = n => Math.round(n).toLocaleString() + " lb";
+function daysAgo(iso){
+  const d = Math.floor((Date.now()-new Date(iso))/86400000);
+  return d<=0 ? "today" : d===1 ? "yesterday" : `${d} days ago`;
+}
+/* heaviest set of a session, ties broken on reps — the number to beat */
+function best(sets){
+  let w=0, r=0;
+  (sets||[]).forEach(s=>{ const a=+(s.weight||0), b=+(s.reps||0);
+    if(a>w || (a===w && b>r)){ w=a; r=b; } });
+  return {w,r};
+}
+function beats(s, last, bw){
+  if(!s.reps || !last) return false;
+  const b = best(last.sets);
+  return bw ? +s.reps > b.r
+            : +(s.weight||0) > b.w || (+(s.weight||0) === b.w && +s.reps > b.r);
+}
+
+async function loadTrain(){
+  T = await api('/api/train');
+  if(T.error){
+    $('#app').innerHTML = `<div class="void" style="margin-top:60px">
+      <b>Training state didn’t parse</b>${esc(T.error)}</div>`;
+    return;
+  }
+  renderTrain();
+}
+
+/* template rows resolved against whichever side of an either/or slot is chosen */
+function activeRows(){
+  const sp = splitById((T.active||{}).split);
+  if(!sp) return [];
+  const sw = (T.active.swaps)||{};
+  return sp.exercises.map(ex => {
+    const swapped = ex.or && sw[ex.id] === ex.or.id;
+    const {or, ...plain} = ex;
+    return swapped ? {...ex.or, slot:ex.id, alt:plain} : {...plain, slot:ex.id, alt:ex.or||null};
+  });
+}
+function rowSets(row){
+  const rec = ((T.active||{}).exercises||{})[row.id];
+  const have = (rec&&rec.sets)||[];
+  const n = Math.max(row.sets||2, have.length);
+  return [...Array(n)].map((_,i)=> have[i] || {weight:null, reps:null});
+}
+function sumLine(){
+  const ex = Object.values(((T.active||{}).exercises)||{});
+  const n = ex.reduce((a,e)=>a+((e.sets||[]).filter(s=>s.reps).length),0);
+  const v = ex.reduce((a,e)=>a+(e.sets||[]).reduce((b,s)=>b+(+(s.weight||0))*(+(s.reps||0)),0),0);
+  return `${n} set${n===1?'':'s'}` + (v?` · ${lbs(v)} moved`:'');
+}
+
+function renderTrain(){
+  const w = T.week||{}, g = w.gym||{}, c = w.cardio||{};
+  $('#app').innerHTML = `
+  <div class="pbar">
+    <a class="btn sm" href="#">← Board</a>
+    <h1>Training</h1>
+    <div class="spread" style="flex:1"></div>
+    <div class="stat">gym <b>${g.count||0}/${g.target||0}</b></div>
+    <div class="stat">· cardio <b>${c.count||0}/${c.target||0}</b></div>
+  </div>
+  ${T.active ? activeView() : idleView()}
+  ${historyView()}`;
+  wireSets(); runWClock();
+}
+
+/* ── nothing in progress: pick the day ── */
+function idleView(){
+  const done = T.week_splits||[];
+  const strip = (T.rotation||[]).map(id=>{
+    const sp = splitById(id) || {id, name:id};
+    const cls = id===T.next ? 'up' : done.includes(id) ? 'done' : '';
+    return `<s class="${cls}" onclick="startSplit('${id}')">${esc(sp.name)}</s>`;
+  }).join("");
+
+  const nx = splitById(T.next);
+  const others = (T.splits||[]).filter(s=>s.id!==T.next);
+  const head = nx ? `
+    <div class="box wnow" style="--c:var(--software)">
+      <div class="wtop">
+        <div>
+          <div class="eyebrow">up next</div>
+          <h2>${esc(nx.name)}</h2>
+          <div class="wsum" style="text-align:left">${nx.exercises.length} exercises ·
+            ${nx.exercises.reduce((a,e)=>a+(e.sets||2),0)} sets</div>
+        </div>
+        <div><button class="go" onclick="startSplit('${nx.id}')"><span class="dot"></span>
+          Start ${esc(nx.name)}</button></div>
+      </div>
+    </div>` : `<div class="void"><b>No rotation yet.</b>
+      Add splits to <code>workouts.yaml</code> and they show up here.</div>`;
+
+  return `
+  <div class="rot">${strip}</div>
+  ${head}
+  <h3 class="sec"><b>Or another day</b></h3>
+  <div class="pickgrid">${others.map(sp=>`
+    <button class="pick" onclick="startSplit('${sp.id}')"><b>${esc(sp.name)}</b>
+      <s>${sp.exercises.length} exercises</s></button>`).join("")}</div>
+  <h3 class="sec"><b>Cardio</b></h3>
+  <div class="pickgrid">${(T.cardio||[]).map(a=>`
+    <button class="pick" onclick="logCardio('${a.id}','${esc(a.name)}',${a.default_minutes||0})">
+      <b>${esc(a.name)}</b><s>${a.default_minutes?a.default_minutes+' min by default':'log it'}</s>
+    </button>`).join("")}</div>`;
+}
+
+/* ── in progress: the ledger ── */
+function activeView(){
+  const sp = splitById(T.active.split) || {name:T.active.split};
+  return `<div class="wsheet">
+  <div class="box wnow" style="--c:var(--software)">
+    <div class="wtop">
+      <div>
+        <div class="eyebrow"><span class="led on"></span> in progress</div>
+        <h2>${esc(sp.name)}</h2>
+      </div>
+      <div>
+        <div class="wclock" id="wclock">0:00</div>
+        <div class="wsum" id="wsum">${sumLine()}</div>
+      </div>
+    </div>
+    <div class="acts">
+      <button class="go" onclick="finishWorkout()"><span class="dot"></span>Finish workout</button>
+      <button class="sm quiet" onclick="discardWorkout(this)">Discard</button>
+    </div>
+  </div>
+  <div class="ledger">${activeRows().map(ledgerRow).join("")}</div></div>`;
+}
+
+function ledgerRow(row){
+  const bw = row.unit==='bw', last = row.last, sets = rowSets(row);
+  return `<div class="lrow ${sets.some(s=>s.reps)?'logged':''}"
+    data-ex="${row.id}" data-slot="${row.slot}" data-unit="${row.unit}">
+    <div class="lhead"><h4>${esc(row.name)}</h4>
+      ${row.alt?`<button class="sm quiet swap"
+        onclick="swapSlot('${row.slot}','${row.alt.id}')">or ${esc(row.alt.name)}</button>`:''}
+    </div>
+    <div class="lbody">
+      <div class="last ${last?'':'none'}">
+        ${last ? `<em>last time</em><b>${last.sets.map(s=>fmtSet(s,bw)).join(" ")}</b>
+                  <span class="ago">${daysAgo(last.ts)}</span>`
+               : `first time — set the baseline`}</div>
+      <div class="sets">
+        ${sets.map((s,i)=>setBox(s,i,bw,last)).join("")}
+        <button class="addset" onclick="addSet('${row.id}')">+ set</button>
+      </div>
+    </div></div>`;
+}
+function setBox(s,i,bw,last){
+  const b = best(last&&last.sets), filled = !!s.reps;
+  return `<label class="sb ${filled?'filled':''} ${filled&&beats(s,last,bw)?'pr':''}" data-i="${i}">
+    ${bw?'':`<input class="w" inputmode="decimal" aria-label="weight"
+      placeholder="${b.w||''}" value="${s.weight??''}">`}
+    <x>×</x>
+    <input class="r" inputmode="numeric" aria-label="reps"
+      placeholder="${b.r||''}" value="${s.reps??''}">
+  </label>`;
+}
+
+function wireSets(){
+  document.querySelectorAll('.lrow').forEach(el=>{
+    el.querySelectorAll('.sb input').forEach(inp=>{
+      inp.oninput = () => onSetInput(el);
+      inp.onkeydown = e => { if(e.key==='Enter'){ e.preventDefault(); focusNext(inp); } };
+    });
+  });
+}
+function readRow(el){
+  return [...el.querySelectorAll('.sb')].map(b=>{
+    const w = b.querySelector('.w'), r = b.querySelector('.r');
+    return {weight: w && w.value.trim() ? w.value.trim() : null,
+            reps:   r && r.value.trim() ? r.value.trim() : null};
+  });
+}
+/* repainting the row would steal focus mid-number, so typing only touches the
+   classes that change and the running total. The save is debounced behind it. */
+function onSetInput(el){
+  const eid = el.dataset.ex, unit = el.dataset.unit, bw = unit==='bw';
+  const sets = readRow(el);
+  T.active.exercises = T.active.exercises || {};
+  T.active.exercises[eid] = {unit, sets};
+  const row = activeRows().find(r=>r.id===eid);
+  [...el.querySelectorAll('.sb')].forEach((b,i)=>{
+    b.classList.toggle('filled', !!sets[i].reps);
+    b.classList.toggle('pr', !!sets[i].reps && beats(sets[i], row&&row.last, bw));
+  });
+  el.classList.toggle('logged', sets.some(s=>s.reps));
+  const sum = $('#wsum'); if(sum) sum.textContent = sumLine();
+  clearTimeout(saveTimer[eid]);
+  saveTimer[eid] = setTimeout(()=>
+    api('/api/workout',{op:'sets', exercise:eid, unit, sets}), 500);
+}
+function focusNext(inp){
+  const all = [...document.querySelectorAll('.lrow .sb input')];
+  const i = all.indexOf(inp);
+  if(i>=0 && i<all.length-1) all[i+1].focus(); else inp.blur();
+}
+function addSet(eid){
+  const row = activeRows().find(r=>r.id===eid);
+  T.active.exercises = T.active.exercises || {};
+  T.active.exercises[eid] = {unit: row.unit, sets: [...rowSets(row), {weight:null,reps:null}]};
+  const el = document.querySelector(`.lrow[data-ex="${eid}"]`);
+  el.outerHTML = ledgerRow(activeRows().find(r=>r.id===eid));
+  wireSets();
+  const boxes = document.querySelectorAll(`.lrow[data-ex="${eid}"] .sb`);
+  const box = boxes[boxes.length-1];
+  (box.querySelector('.w') || box.querySelector('.r')).focus();
+}
+
+async function startSplit(id){
+  const r = await api('/api/workout',{op:'start', split:id});
+  if(!r.ok){ toast(r.message, true); return; }
+  loadTrain();
+}
+async function swapSlot(slot, exercise){
+  const r = await api('/api/workout',{op:'swap', slot, exercise});
+  if(!r.ok){ toast(r.message, true); return; }
+  loadTrain();
+}
+function discardWorkout(btn){
+  if(btn.dataset.armed !== '1'){
+    btn.dataset.armed = '1'; btn.textContent = 'Discard — sure?';
+    setTimeout(()=>{ btn.dataset.armed=''; btn.textContent='Discard'; }, 4000);
+    return;
+  }
+  api('/api/workout',{op:'discard'}).then(r=>{ toast(r.message, !r.ok); loadTrain(); });
+}
+async function finishWorkout(){
+  Object.values(saveTimer).forEach(clearTimeout);
+  const ex = (T.active||{}).exercises || {};
+  const n = Object.values(ex).reduce((a,e)=>a+(e.sets||[]).filter(s=>s.reps).length, 0);
+  if(!n){ toast("Nothing logged yet — record a set first.", true); return; }
+  /* the whole map travels with the request so a debounced save can't be lost */
+  const r = await api('/api/workout',{op:'finish', exercises:ex});
+  toast(r.ok ? r.message.replace('logged: ','Logged ') : r.message, !r.ok);
+  if(r.ok) loadTrain();
+}
+async function logCardio(id, name, mins){
+  const v = await ask(name, "How long?", mins ? `${mins} minutes` : "minutes");
+  if(v===null) return;
+  const minutes = parseInt(v,10) || mins || null;
+  const r = await api('/api/cardio',{activity:id, minutes});
+  toast(r.ok ? r.message.replace('logged: ','Logged ') : r.message, !r.ok);
+  if(r.ok) loadTrain();
+}
+function runWClock(){
+  clearInterval(wtick);
+  const el = $('#wclock');
+  if(!el || !T.active || !T.active.started) return;
+  const start = new Date(T.active.started);
+  const paint = () => {
+    const s = Math.max(0, Math.floor((Date.now()-start)/1000));
+    el.textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  };
+  paint(); wtick = setInterval(paint, 1000);
+}
+
+function historyView(){
+  if(!(T.recent||[]).length) return `<h3 class="sec"><b>Recent</b></h3>
+    <div class="void"><b>No sessions yet.</b>Start a split above. What you record lands
+    here, and in the streak pips on the board — it is all one log.</div>`;
+  return `<h3 class="sec"><b>Recent</b></h3>
+    <div class="hist">${T.recent.map(histRow).join("")}</div>`;
+}
+function histRow(e){
+  const c = e.kind==='gym' ? 'var(--software)' : 'var(--side)';
+  const meta = [e.when, e.minutes?dur(e.minutes):null, e.volume?lbs(e.volume):null]
+    .filter(Boolean).join(" · ");
+  const head = `<i style="background:${c}"></i><span>${esc(e.detail)}</span>
+    <span class="rt">${meta}</span>`;
+  if(!(e.exercises||[]).length) return `<div class="hrow"><div class="hsum">${head}</div></div>`;
+  return `<details class="hrow"><summary>${head}</summary>
+    <div class="hdet">${e.exercises.map(x=>
+      `<div><span>${esc(x.name)}</span>${x.sets.map(st=>
+        fmtSet(st, x.unit==='bw')).join(" ")}</div>`).join("")}</div></details>`;
+}
+
 /* ───────────────────────── actions ───────────────────────── */
 function runClock(){
   clearInterval(tick);
@@ -1024,23 +1548,32 @@ async function quick(kind){
 }
 
 /* ── checkout ── */
+/* The span, not a duration. Defaults to a sensible window ending now, so the
+   common case (log what you just did) is two edits, and backdating to Tuesday
+   3-5pm is three. */
 function openCheckout(project, minutes, blockId){
-  focusVal = null;
   const cur = S.projects.find(p=>p.id===project);
+  const end = new Date();
+  const start = new Date(end - (minutes||50)*60000);
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${
+    String(d.getDate()).padStart(2,'0')}`;
+  const clock = d => `${String(d.getHours()).padStart(2,'0')}:${
+    String(d.getMinutes()).padStart(2,'0')}`;
   const s = document.createElement('div');
   s.className='scrim'; s.onclick = e => { if(e.target===s) s.remove(); };
   s.innerHTML = `<div class="window modal">
     <h2>Check out</h2>
-    <p class="hint">Two things carry weight: an honest focus number, and a next step you could
-      start without thinking.</p>
+    <p class="hint">When you worked, and a next step you could start without thinking.</p>
     <label>Project</label>
-    <select id="c-proj">${S.projects.map(p=>
+    <select id="c-proj">${S.projects.filter(p=>!p.archived||p.id===project).map(p=>
       `<option value="${p.id}"${p.id===project?' selected':''}>${esc(p.name)}</option>`).join("")}</select>
-    <label>Focus</label>
-    <div class="scale" id="c-focus">${[1,2,3,4,5].map(n=>
-      `<button type="button" aria-pressed="false" onclick="pick(${n})">${n}</button>`).join("")}</div>
-    <div class="ends"><span>scattered</span><span>locked in</span></div>
-    <label>Minutes</label><input id="c-min" type="number" min="1" value="${minutes||50}">
+    <label>Day</label>
+    <input id="c-date" type="date" value="${iso(start)}" max="${iso(new Date())}">
+    <div class="span">
+      <div><label>From</label><input id="c-from" type="time" value="${clock(start)}"></div>
+      <div><label>To</label><input id="c-to" type="time" value="${clock(end)}"></div>
+      <div class="dur" id="c-dur"></div>
+    </div>
     <label>What changed?</label>
     <textarea id="c-did" placeholder="Something concrete — not &quot;worked on it&quot;"></textarea>
     <label>Next step</label>
@@ -1051,23 +1584,39 @@ function openCheckout(project, minutes, blockId){
       <button class="go" onclick="save('${blockId||""}')">Save</button>
       <button class="quiet" onclick="this.closest('.scrim').remove()">Cancel</button></div></div>`;
   document.body.appendChild(s);
+  ['#c-date','#c-from','#c-to'].forEach(sel => $(sel).oninput = span);
+  span();
   setTimeout(()=>$('#c-did').focus(),50);
 }
-function pick(n){
-  focusVal=n;
-  [...document.querySelectorAll('#c-focus button')].forEach((b,i)=>
-    b.setAttribute('aria-pressed',String(i+1===n)));
+
+/* Reads the three fields as one span. Returns null when they don't make sense,
+   and says why in the line under the times rather than at save time. */
+function span(){
+  const out = $('#c-dur'); if(!out) return null;
+  const d = $('#c-date').value, a = $('#c-from').value, b = $('#c-to').value;
+  if(!(d && a && b)){ out.textContent=''; out.className='dur'; return null; }
+  const from = new Date(`${d}T${a}`), to = new Date(`${d}T${b}`);
+  const mins = Math.round((to - from)/60000);
+  if(mins <= 0){
+    out.textContent = 'ends before it starts'; out.className='dur bad'; return null; }
+  if(mins > 720){
+    out.textContent = 'over 12 hours — check the times'; out.className='dur bad'; return null; }
+  out.textContent = dur(mins); out.className='dur';
+  return {started_at:`${d}T${a}:00`, ended_at:`${d}T${b}:00`, minutes:mins};
 }
+
 async function save(blockId){
   const next = $('#c-next').value.trim();
   if(!next){ toast("Needs a next step — it’s the cold-start opener.",true); $('#c-next').focus(); return; }
+  const when = span();
+  if(!when){ toast("Check the day and times.",true); $('#c-from').focus(); return; }
   const r = await api('/api/checkout',{
-    project:$('#c-proj').value, focus:focusVal,
-    actual_minutes:parseInt($('#c-min').value,10)||null,
+    project:$('#c-proj').value,
+    started_at:when.started_at, ended_at:when.ended_at,
     did:$('#c-did').value.trim(), next,
     blockers:$('#c-block').value.trim(), block_id:blockId||null});
   if(!r.ok){ toast("Rejected: "+r.message,true); return; }
-  $('.scrim')?.remove(); toast("Logged."); load();
+  $('.scrim')?.remove(); toast("Logged — queued for Claude Plan."); load();
 }
 
 addEventListener('hashchange', () => { closeDrawer(); if(S) render(); });

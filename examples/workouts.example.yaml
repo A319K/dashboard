@@ -1,0 +1,144 @@
+# ═══════════════════════════════════════════════════════════════════
+# Workout templates — copy to ../workouts.yaml and make it yours.
+#
+#     cp examples/workouts.example.yaml workouts.yaml
+#
+# The training view (#train on the dashboard) reads this file. Nothing
+# about a routine is hardcoded in the UI, so this is the only place to
+# edit — change it, reload the page, done.
+#
+# Every exercise needs a stable `id`. History is keyed on it: rename
+# `name` freely and your numbers follow, change `id` and you start a
+# fresh line. Share an id across splits on purpose — the same lift in
+# two different days should be one history, not two.
+#
+#   sets:  how many the view lays out. You can always add more mid-set.
+#   unit:  lb (default) | bw — bodyweight logs reps only, no weight.
+#   or:    a second exercise for the same slot. The view offers a swap,
+#          and each side keeps its own history.
+#
+# The example below is a five-day push/pull/legs + upper/lower cycle.
+# Replace it with whatever you actually do — a three-day full-body
+# rotation or a single `splits` entry both work fine.
+# ═══════════════════════════════════════════════════════════════════
+
+# The cycle, in order. "Up next" is whatever follows the split you
+# logged last, so skipping a day shifts the rotation forward instead
+# of leaving you permanently behind it.
+rotation:
+  - push
+  - pull
+  - legs
+  - upper
+  - lower
+
+# Cardio is logged, not planned: pick the activity, confirm the length.
+cardio:
+  - id: run
+    name: Run
+    default_minutes: 30
+  - id: bike
+    name: Bike
+    default_minutes: 45
+  - id: swim
+    name: Swim
+    default_minutes: 30
+  - id: sport
+    name: Pickup game
+    default_minutes: 60
+  - id: other
+    name: Something else
+    default_minutes: 30
+
+splits:
+  - id: push
+    name: Push
+    exercises:
+      - id: incline-press
+        name: Incline chest press
+        sets: 2
+      - id: chest-fly
+        name: Chest fly
+        sets: 2
+      - id: tricep-crossbody
+        name: Cross-body cable tricep pulldown
+        sets: 2
+      # An either/or slot: whichever machine is free that day.
+      - id: dips
+        name: Dips
+        unit: bw
+        sets: 2
+        or:
+          id: tricep-pushdown
+          name: Cable tricep pushdown
+          sets: 2
+      - id: lateral-raise
+        name: Lateral raise
+        sets: 2
+
+  - id: pull
+    name: Pull
+    exercises:
+      - id: lat-pulldown
+        name: Lat pulldown
+        sets: 2
+      - id: tbar-row
+        name: T-bar row
+        sets: 2
+      - id: hammer-curl
+        name: Hammer curl
+        sets: 2
+      - id: preacher-curl-single
+        name: Single-arm preacher curl
+        sets: 2
+
+  - id: legs
+    name: Legs
+    exercises:
+      - id: quad-ext
+        name: Quad extension
+        sets: 2
+      - id: ham-curl
+        name: Hamstring curl
+        sets: 2
+      - id: leg-press
+        name: Leg press
+        sets: 2
+
+  - id: upper
+    name: Upper
+    exercises:
+      - id: chest-fly
+        name: Chest fly
+        sets: 2
+      - id: lateral-raise
+        name: Lateral raise
+        sets: 2
+      - id: tricep-crossbody
+        name: Cross-body cable tricep pulldown
+        sets: 2
+      - id: preacher-curl
+        name: Bicep preacher curl
+        sets: 2
+      - id: hammer-curl
+        name: Hammer curl
+        sets: 2
+      - id: tbar-row
+        name: T-bar row
+        sets: 2
+      - id: lat-row
+        name: Lat row
+        sets: 2
+
+  - id: lower
+    name: Lower
+    exercises:
+      - id: quad-ext
+        name: Quad extension
+        sets: 2
+      - id: rdl
+        name: Romanian deadlift
+        sets: 2
+      - id: leg-press
+        name: Leg press
+        sets: 2

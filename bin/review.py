@@ -74,24 +74,34 @@ def main() -> int:
         for proj, rows in sorted(by_project.items(),
                                  key=lambda kv: -sum(r.get("actual_minutes") or 0 for r in kv[1])):
             mins = sum(r.get("actual_minutes") or 0 for r in rows)
-            focus = [r["focus"] for r in rows if r.get("focus")]
-            f = f"focus {statistics.median(focus):.1f}" if focus else "focus —"
-            print(f"  {proj:<18} {mins/60:>5.1f}h  ({len(rows)} sessions, {f})")
+            spans = [r["actual_minutes"] for r in rows if r.get("actual_minutes")]
+            avg = f", {statistics.median(spans):.0f} min median" if spans else ""
+            print(f"  {proj:<18} {mins/60:>5.1f}h  ({len(rows)} sessions{avg})")
 
-        # --- focus by day x hour ---
-        print("\n--- Focus by day × hour ---")
-        cell: dict[tuple[int, int], list[int]] = defaultdict(list)
+        # --- when the work actually happens ---
+        # Sessions carry a real span now, so this counts every hour a session was
+        # running rather than the single hour it was logged in. That is the signal
+        # the planner wants: which hours you genuinely work, not when you check out.
+        print("\n--- Hours worked by day × hour ---")
+        cell: dict[tuple[int, int], int] = defaultdict(int)
         for s in sessions:
-            if not s.get("focus"):
+            start = s.get("started_at")
+            mins = s.get("actual_minutes")
+            if not start or not mins:
                 continue
-            t = datetime.fromisoformat(s["ts"])
-            cell[(t.weekday(), t.hour)].append(s["focus"])
+            t = datetime.fromisoformat(start)
+            for step in range(0, mins, 60):
+                at = t + timedelta(minutes=step)
+                cell[(at.weekday(), at.hour)] += min(60, mins - step)
         if not cell:
-            print("  (no focus ratings recorded)")
+            print("  (no sessions with recorded times yet)")
         else:
-            for (dow, hour), vals in sorted(cell.items()):
-                print(f"  {DAYS[dow]} {hour:02d}:00  "
-                      f"{statistics.mean(vals):.1f}  {bar(len(vals))} ({len(vals)})")
+            peak = max(cell.values())
+            for (dow, hour), mins in sorted(cell.items()):
+                print(f"  {DAYS[dow]} {hour:02d}:00  {bar(round(mins / peak * 6))} "
+                      f"({mins} min)")
+            best = max(cell.items(), key=lambda kv: kv[1])
+            print(f"  → densest hour: {DAYS[best[0][0]]} {best[0][1]:02d}:00")
 
         # --- planned vs actual drift ---
         drift = [(s["project"], s["actual_minutes"] - s["planned_minutes"])
@@ -112,9 +122,12 @@ def main() -> int:
             print(f"\n--- Unplanned sessions: {len(unplanned)}/{len(sessions)} ---")
             print("  (work happening outside the plan — candidate slots to plan into)")
             for s in unplanned[-8:]:
-                t = datetime.fromisoformat(s["ts"])
-                print(f"    {DAYS[t.weekday()]} {t.hour:02d}:00  {s['project']} "
-                      f"· focus {s.get('focus') or '?'}")
+                # started_at when we have it: the hour you began is the schedulable
+                # one; ts is only when you happened to write the session down.
+                t = datetime.fromisoformat(s.get("started_at") or s["ts"])
+                mins = s.get("actual_minutes")
+                print(f"    {DAYS[t.weekday()]} {t:%H:%M}  {s['project']}"
+                      f"{f' · {mins} min' if mins else ''}")
 
         # --- blockers ---
         blocked = [(s["project"], b) for s in sessions for b in s.get("blockers", [])]
